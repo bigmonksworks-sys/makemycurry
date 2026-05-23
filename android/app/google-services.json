@@ -1,0 +1,190 @@
+{
+  "project_info": {
+    "project_number": "877159582227",
+    "project_id": "fishy-e1060",
+    "storage_bucket": "fishy-e1060.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:877159582227:android:0d6288133fdb3ea9bdcde6",
+        "android_client_info": {
+          "package_name": "com.fishy.rider"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "877159582227-grtnh12tu61fi1j8cqaupvj9ifm1qdmj.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.fishy.rider",
+            "certificate_hash": "2ed9c7d1820d01868fb64ce1cb1907ba7b591779"
+          }
+        },
+        {
+          "client_id": "877159582227-5ju8vvg41del5g40a2jigg9fgvgjl6ju.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDr5GGb1hPCLPM0-NOkav0rlHANjL94sG4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "877159582227-5ju8vvg41del5g40a2jigg9fgvgjl6ju.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "877159582227-4gh42l61937n7ooncr2odj6k3mn11qa7.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.fishy.user"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:877159582227:android:4b9de55b8c7f53abbdcde6",
+        "android_client_info": {
+          "package_name": "com.fishy.user"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "877159582227-8n9b2eavd09e33446g3h425cf3hnm8c4.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.fishy.user",
+            "certificate_hash": "07741344e57c02e238f77935b406f1bba831c25e"
+          }
+        },
+        {
+          "client_id": "877159582227-aeoal6m3vpa56o4s5fh08quda1r97jca.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.fishy.user",
+            "certificate_hash": "f2faab58ebb0ca5ce74c68ee8d65635338c677ac"
+          }
+        },
+        {
+          "client_id": "877159582227-as9u75pldd866rofbm90qhrum2506uoc.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.fishy.user",
+            "certificate_hash": "f8266aee2ead7f425456ec5263dcc32db1270ee1"
+          }
+        },
+        {
+          "client_id": "877159582227-dnhfvde96mqej5epns61m8386qh8dqnj.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.fishy.user",
+            "certificate_hash": "0c2080fa0996b82906ea18048312b2c2da625f7e"
+          }
+        },
+        {
+          "client_id": "877159582227-lntfh55a5b125lo0pmg5k9vqn5vuplth.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.fishy.user",
+            "certificate_hash": "b399bbf4a4a81175c4bb5815e7df332fa474ba3b"
+          }
+        },
+        {
+          "client_id": "877159582227-t4084qcbb8v0600h702cahm41jjum7v3.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.fishy.user",
+            "certificate_hash": "0e46e1d12aa4a805ae77c54a6ca31726e32d6655"
+          }
+        },
+        {
+          "client_id": "877159582227-t5bgengqkir405i5befupc7kg5nv2m4g.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.fishy.user",
+            "certificate_hash": "f49375e8769e0d5ffa4220533a99f31af7daf06a"
+          }
+        },
+        {
+          "client_id": "877159582227-vtfrvpkkn4nkhr3abpv8hmise0b0plu9.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.fishy.user",
+            "certificate_hash": "69e5fdd7ba1ec2b22a2da481c25c4b27851bafbb"
+          }
+        },
+        {
+          "client_id": "877159582227-5ju8vvg41del5g40a2jigg9fgvgjl6ju.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDr5GGb1hPCLPM0-NOkav0rlHANjL94sG4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "877159582227-5ju8vvg41del5g40a2jigg9fgvgjl6ju.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "877159582227-4gh42l61937n7ooncr2odj6k3mn11qa7.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.fishy.user"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:877159582227:android:985c68cbfc89d457bdcde6",
+        "android_client_info": {
+          "package_name": "com.mmc.user"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "877159582227-5ju8vvg41del5g40a2jigg9fgvgjl6ju.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDr5GGb1hPCLPM0-NOkav0rlHANjL94sG4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "877159582227-5ju8vvg41del5g40a2jigg9fgvgjl6ju.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "877159582227-4gh42l61937n7ooncr2odj6k3mn11qa7.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.fishy.user"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

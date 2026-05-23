@@ -1,0 +1,280 @@
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_grocery/common/widgets/custom_pop_scope_widget.dart';
+import 'package:flutter_grocery/features/menu/domain/models/custom_drawer_controller_model.dart';
+import 'package:flutter_grocery/features/menu/domain/models/main_screen_model.dart';
+import 'package:flutter_grocery/helper/responsive_helper.dart';
+import 'package:flutter_grocery/helper/route_helper.dart';
+import 'package:flutter_grocery/localization/language_constraints.dart';
+import 'package:flutter_grocery/common/providers/cart_provider.dart';
+import 'package:flutter_grocery/features/address/providers/location_provider.dart';
+import 'package:flutter_grocery/features/profile/providers/profile_provider.dart';
+import 'package:flutter_grocery/features/splash/providers/splash_provider.dart';
+import 'package:flutter_grocery/common/providers/theme_provider.dart';
+import 'package:flutter_grocery/utill/dimensions.dart';
+import 'package:flutter_grocery/utill/images.dart';
+import 'package:flutter_grocery/utill/styles.dart';
+import 'package:flutter_grocery/common/widgets/third_party_chat_widget.dart';
+import 'package:flutter_grocery/features/home/screens/home_screens.dart';
+import 'package:flutter_grocery/features/refer_and_earn/screens/refer_and_earn_screen.dart';
+import 'package:provider/provider.dart';
+import 'package:flutter_grocery/theme/light_theme.dart';
+import 'package:flutter_grocery/features/menu/screens/menu_screen.dart';
+import 'package:flutter_grocery/features/home/widgets/nearby_branch_bottom_sheet.dart';
+// List<MainScreenModel> screenList = [
+//   MainScreenModel(const HomeScreen(), 'home', Images.home),
+//   MainScreenModel(const AllCategoriesScreen(), 'all_categories', Images.list),
+//   MainScreenModel(const CartScreen(), 'shopping_bag', Images.orderBag),
+//   MainScreenModel(const WishListScreen(), 'favourite', Images.favouriteIcon),
+//   MainScreenModel(const OrderListScreen(), 'my_order', Images.orderList),
+//   MainScreenModel(const OrderSearchScreen(), 'order_track', Images.orderDetails),
+//   MainScreenModel(const AddressListScreen(), 'address', Images.location),
+//   MainScreenModel(const CouponScreen(), 'coupon', Images.coupon),
+//   MainScreenModel(const ChatScreen(orderModel: null,), 'live_chat', Images.chat),
+//   MainScreenModel(const SettingsScreen(), 'settings', Images.settings),
+//   if(Provider.of<SplashProvider>(Get.context!, listen: false).configModel?.walletStatus! ?? false)
+//     MainScreenModel(const WalletScreen(), 'wallet', Images.wallet),
+//   if(Provider.of<SplashProvider>(Get.context!, listen: false).configModel?.loyaltyPointStatus! ?? false)
+//     MainScreenModel(const LoyaltyScreen(), 'loyalty_point', Images.loyaltyIcon),
+//   MainScreenModel(const HtmlViewerScreen(htmlType: HtmlType.termsAndCondition), 'terms_and_condition', Images.termsAndConditions),
+//   MainScreenModel(const HtmlViewerScreen(htmlType: HtmlType.privacyPolicy), 'privacy_policy', Images.privacyPolicy),
+//   MainScreenModel(const HtmlViewerScreen(htmlType: HtmlType.aboutUs), 'about_us', Images.aboutUs),
+//   if(Provider.of<SplashProvider>(Get.context!, listen: false).configModel?.returnPolicyStatus ?? false)
+//     MainScreenModel(const HtmlViewerScreen(htmlType: HtmlType.returnPolicy), 'return_policy', Images.returnPolicy),
+//
+//   if(Provider.of<SplashProvider>(Get.context!, listen: false).configModel?.refundPolicyStatus ?? false)
+//     MainScreenModel(const HtmlViewerScreen(htmlType: HtmlType.refundPolicy), 'refund_policy', Images.refundPolicy),
+//
+//   if(Provider.of<SplashProvider>(Get.context!, listen: false).configModel?.cancellationPolicyStatus ?? false)
+//     MainScreenModel(const HtmlViewerScreen(htmlType: HtmlType.cancellationPolicy), 'cancellation_policy', Images.cancellationPolicy),
+//
+//   MainScreenModel(const HtmlViewerScreen(htmlType: HtmlType.faq), 'faq', Images.faq),
+// ];
+
+class MainScreen extends StatefulWidget {
+  final bool isReload;
+  final CustomDrawerController drawerController;
+  const MainScreen(
+      {super.key, required this.drawerController, this.isReload = true});
+
+  @override
+  State<MainScreen> createState() => _MainScreenState();
+}
+
+class _MainScreenState extends State<MainScreen> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  bool canExit = kIsWeb;
+
+  String _getGreeting() {
+    final hour = DateTime.now().hour;
+    if (hour >= 5 && hour < 12) {
+      return 'Good Morning';
+    } else if (hour >= 12 && hour < 17) {
+      return 'Good Afternoon';
+    } else {
+      return 'Good Evening';
+    }
+  }
+
+  @override
+  void initState() {
+    final SplashProvider splashProvider =
+        Provider.of<SplashProvider>(context, listen: false);
+    splashProvider.initializeScreenList();
+    splashProvider.loadSelectedBranch();
+    if (widget.isReload) {
+      HomeScreen.loadData(true, context);
+    }
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bool isDarkTheme =
+        Provider.of<ThemeProvider>(context, listen: false).darkTheme;
+    return Consumer<SplashProvider>(
+      builder: (context, splash, child) {
+        return CustomPopScopeWidget(
+          child: Consumer<ProfileProvider>(
+              builder: (context, profileProvider, child) {
+            final referMenu = MainScreenModel(const ReferAndEarnScreen(),
+                'referAndEarn', Images.referralIcon);
+            if ((splash.configModel?.referEarnStatus ?? false) &&
+                profileProvider.userInfoModel?.referCode != null &&
+                splash.screenList[9].title != 'referAndEarn') {
+              splash.screenList
+                  .removeWhere((menu) => menu.screen == referMenu.screen);
+              splash.screenList.insert(9, referMenu);
+            }
+
+            return Consumer<LocationProvider>(
+              builder: (context, locationProvider, child) => InkWell(
+                onTap: () {},
+                child: Scaffold(
+                  key: _scaffoldKey,
+                  drawer: const MenuWidget(),
+                  floatingActionButton: (!ResponsiveHelper.isDesktop(context) &&
+                          splash.pageIndex != 2)
+                      ? Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 50.0),
+                          child: ThirdPartyChatWidget(
+                              configModel: splash.configModel),
+                        )
+                      : null,
+                  appBar: (ResponsiveHelper.isDesktop(context) ||
+                          splash.pageIndex == 2)
+                      ? null
+                      : AppBar(
+                          backgroundColor: Theme.of(context).cardColor,
+                          leading: IconButton(
+                              icon: const Icon(
+                                Icons.menu,
+                                size: 25,
+                              ),
+                              onPressed: () {
+                                _scaffoldKey.currentState?.openDrawer();
+                              }),
+                          title: splash.pageIndex == 0
+                              ? InkWell(
+                                  onTap: () {
+                                    showModalBottomSheet(
+                                      context: context,
+                                      isScrollControlled: true,
+                                      backgroundColor: Colors.transparent,
+                                      builder: (context) => const NearbyBranchBottomSheet(),
+                                    );
+                                  },
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                    decoration: BoxDecoration(
+                                      color: Theme.of(context).primaryColor.withValues(alpha: 0.06),
+                                      borderRadius: BorderRadius.circular(30),
+                                      border: Border.all(
+                                        color: Theme.of(context).primaryColor.withValues(alpha: 0.12),
+                                        width: 1,
+                                      ),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(
+                                          Icons.location_on_rounded,
+                                          color: Theme.of(context).primaryColor,
+                                          size: 16,
+                                        ),
+                                        const SizedBox(width: 6),
+                                        Flexible(
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Text(
+                                                getTranslated('deliver_to', context).toUpperCase(),
+                                                style: poppinsMedium.copyWith(
+                                                  fontSize: 8,
+                                                  color: Colors.grey[600],
+                                                  letterSpacing: 0.6,
+                                                ),
+                                              ),
+                                              Text(
+                                                splash.selectedBranchName,
+                                                style: poppinsBold.copyWith(
+                                                  fontSize: 13,
+                                                  color: Colors.black87,
+                                                ),
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        const SizedBox(width: 4),
+                                        Icon(
+                                          Icons.keyboard_arrow_down_rounded,
+                                          color: Theme.of(context).primaryColor,
+                                          size: 18,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                )
+                              : Text(
+                                  getTranslated(
+                                      splash.screenList[splash.pageIndex].title,
+                                      context),
+                                  style: poppinsMedium.copyWith(
+                                      fontSize: Dimensions.fontSizeLarge,
+                                      color: Theme.of(context).primaryColor),
+                                ),
+                          actions: splash.pageIndex == 0
+                              ? [
+                                  IconButton(
+                                    icon: Image.asset(Images.search,
+                                        color: Theme.of(context).primaryColor,
+                                        width: 25),
+                                    onPressed: () {
+                                      Navigator.pushNamed(
+                                          context, RouteHelper.searchProduct);
+                                    },
+                                  ),
+                                  IconButton(
+                                      icon: Stack(
+                                          clipBehavior: Clip.none,
+                                          children: [
+                                            Icon(Icons.shopping_cart_outlined,
+                                                color: Theme.of(context)
+                                                    .primaryColor,
+                                                size: 25),
+                                            Positioned(
+                                              top: -5,
+                                              right: -5,
+                                              child: Container(
+                                                padding: const EdgeInsets.all(3),
+                                                decoration: BoxDecoration(
+                                                    shape: BoxShape.circle,
+                                                    color: pesitoAlert,
+                                                    border: Border.all(color: Theme.of(context).cardColor, width: 1.5),
+                                                ),
+                                                constraints: const BoxConstraints(
+                                                  minWidth: 16,
+                                                  minHeight: 16,
+                                                ),
+                                                child: Center(
+                                                  child: Text(
+                                                      '${Provider.of<CartProvider>(context).cartList.length}',
+                                                      style: TextStyle(
+                                                          color: Theme.of(context).cardColor,
+                                                          fontWeight: FontWeight.bold,
+                                                          fontSize: 8)),
+                                                ),
+                                              ),
+                                            ),
+                                          ]),
+                                      onPressed: () {
+                                        splash.setPageIndex(2);
+                                      }),
+                                ]
+                              : splash.pageIndex == 2
+                                  ? [
+                                      Center(child: Consumer<CartProvider>(
+                                          builder: (context, cartProvider, _) {
+                                        return Text(
+                                            '${cartProvider.cartList.length} ${getTranslated('items', context)}',
+                                            style: poppinsMedium.copyWith(
+                                                color: Theme.of(context)
+                                                    .primaryColor));
+                                      })),
+                                      const SizedBox(width: 20)
+                                    ]
+                                  : null,
+                        ),
+                  body: splash.screenList[splash.pageIndex].screen,
+                ),
+              ),
+            );
+          }),
+        );
+      },
+    );
+  }
+}
