@@ -611,17 +611,21 @@ class SubVariant {
   int? productId;
   String? name;
   double? price;
+  double? mrp;
+  dynamic attributes;
   int? stock;
   bool? isActive;
   String? image;
 
-  SubVariant({this.id, this.productId, this.name, this.price, this.stock, this.isActive, this.image});
+  SubVariant({this.id, this.productId, this.name, this.price, this.mrp, this.attributes, this.stock, this.isActive, this.image});
 
   SubVariant.fromJson(Map<String, dynamic> json) {
     id = json['id'];
     productId = json['product_id'];
     name = json['name'];
     price = json['price'] != null ? double.tryParse(json['price'].toString()) : null;
+    mrp = json['mrp'] != null ? double.tryParse(json['mrp'].toString()) : null;
+    attributes = json['attributes'];
     stock = json['stock'];
     isActive = json['is_active'] == 1 || json['is_active'] == true;
     image = json['image'];
@@ -633,6 +637,8 @@ class SubVariant {
     data['product_id'] = productId;
     data['name'] = name;
     data['price'] = price;
+    data['mrp'] = mrp;
+    data['attributes'] = attributes;
     data['stock'] = stock;
     data['is_active'] = isActive;
     data['image'] = image;

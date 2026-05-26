@@ -1,6 +1,5 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:flutter_grocery/common/models/nearby_branch_model.dart';
 import 'package:flutter_grocery/features/splash/providers/splash_provider.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:provider/provider.dart';

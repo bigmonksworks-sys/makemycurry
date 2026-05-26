@@ -659,12 +659,52 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen>  with Ticke
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
+                        if (subVariant.attributes != null) ...[
+                          const SizedBox(height: 2),
+                          Text(
+                            _getAttributesText(product, subVariant),
+                            style: poppinsRegular.copyWith(
+                              fontSize: Dimensions.fontSizeSmall,
+                              color: Colors.black54,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
                         const SizedBox(height: 2),
+                        if (subVariant.mrp != null && subVariant.mrp! > (subVariant.price ?? 0)) ...[
+                          RichText(
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            text: TextSpan(
+                              children: [
+                                TextSpan(
+                                  text: '${getTranslated('mrp', context)}: ',
+                                  style: poppinsRegular.copyWith(fontSize: 10, color: const Color(0xFF888888)),
+                                ),
+                                TextSpan(
+                                  text: PriceConverterHelper.convertPrice(context, subVariant.mrp),
+                                  style: poppinsRegular.copyWith(
+                                    fontSize: 11,
+                                    color: const Color(0xFF888888),
+                                    decoration: TextDecoration.lineThrough,
+                                  ),
+                                ),
+                              ]
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                        ],
                         RichText(
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           text: TextSpan(
                             children: [
+                              if (subVariant.mrp != null && subVariant.mrp! > (subVariant.price ?? 0))
+                                TextSpan(
+                                  text: '${getTranslated('our_price', context)}: ',
+                                  style: poppinsMedium.copyWith(fontSize: 10, color: Colors.black54),
+                                ),
                               TextSpan(
                                 text: PriceConverterHelper.convertPrice(context, subVariant.price),
                                 style: poppinsSemiBold.copyWith(fontSize: 14, color: Colors.black),
@@ -695,6 +735,46 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen>  with Ticke
         ),
       ]),
     );
+  }
+
+  String _getAttributesText(Product product, SubVariant subVariant) {
+    if (subVariant.attributes == null) {
+      return '';
+    }
+    List<String> list = [];
+    if (subVariant.attributes is Map) {
+      (subVariant.attributes as Map).forEach((key, value) {
+        String choiceName = 'choice_options_$key';
+        ChoiceOptions? choice;
+        try {
+          choice = product.choiceOptions?.firstWhere((element) => element.name == choiceName);
+        } catch (_) {}
+        if (choice != null && choice.title != null && choice.title!.isNotEmpty) {
+          list.add('${choice.title}: $value');
+        } else {
+          list.add('$value');
+        }
+      });
+    } else if (subVariant.attributes is List) {
+      // If it is encoded as a list
+      for (var item in subVariant.attributes) {
+        if (item is Map) {
+          item.forEach((key, value) {
+            String choiceName = 'choice_options_$key';
+            ChoiceOptions? choice;
+            try {
+              choice = product.choiceOptions?.firstWhere((element) => element.name == choiceName);
+            } catch (_) {}
+            if (choice != null && choice.title != null && choice.title!.isNotEmpty) {
+              list.add('${choice.title}: $value');
+            } else {
+              list.add('$value');
+            }
+          });
+        }
+      }
+    }
+    return list.join(', ');
   }
 }
 
