@@ -144,59 +144,82 @@ class _MainScreenState extends State<MainScreen> {
                                       builder: (context) => const NearbyBranchBottomSheet(),
                                     );
                                   },
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                    decoration: BoxDecoration(
-                                      color: Theme.of(context).primaryColor.withValues(alpha: 0.06),
-                                      borderRadius: BorderRadius.circular(30),
-                                      border: Border.all(
-                                        color: Theme.of(context).primaryColor.withValues(alpha: 0.12),
-                                        width: 1,
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(8),
                                       ),
-                                    ),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Icon(
-                                          Icons.location_on_rounded,
-                                          color: Theme.of(context).primaryColor,
-                                          size: 16,
-                                        ),
-                                        const SizedBox(width: 6),
-                                        Flexible(
-                                          child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                            mainAxisSize: MainAxisSize.min,
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          // Glowing location container with active pulse dot
+                                          Stack(
+                                            clipBehavior: Clip.none,
                                             children: [
-                                              Text(
-                                                getTranslated('deliver_to', context).toUpperCase(),
-                                                style: poppinsMedium.copyWith(
-                                                  fontSize: 8,
-                                                  color: Colors.grey[600],
-                                                  letterSpacing: 0.6,
-                                                ),
+                                              Icon(
+                                                Icons.location_on_rounded,
+                                                color: Theme.of(context).primaryColor,
+                                                size: 20,
                                               ),
-                                              Text(
-                                                splash.selectedBranchName,
-                                                style: poppinsBold.copyWith(
-                                                  fontSize: 13,
-                                                  color: Colors.black87,
+                                              // Active/Live status dot
+                                              Positioned(
+                                                top: -1,
+                                                right: -1,
+                                                child: Container(
+                                                  width: 8,
+                                                  height: 8,
+                                                  decoration: BoxDecoration(
+                                                    color: Colors.green,
+                                                    shape: BoxShape.circle,
+                                                    border: Border.all(color: Theme.of(context).cardColor, width: 1.5),
+                                                    boxShadow: [
+                                                      BoxShadow(
+                                                        color: Colors.green.withValues(alpha: 0.4),
+                                                        blurRadius: 4,
+                                                        spreadRadius: 1,
+                                                      )
+                                                    ],
+                                                  ),
                                                 ),
-                                                maxLines: 1,
-                                                overflow: TextOverflow.ellipsis,
                                               ),
                                             ],
                                           ),
-                                        ),
-                                        const SizedBox(width: 4),
-                                        Icon(
-                                          Icons.keyboard_arrow_down_rounded,
-                                          color: Theme.of(context).primaryColor,
-                                          size: 18,
-                                        ),
-                                      ],
+                                          const SizedBox(width: 8),
+                                          Flexible(
+                                            child: Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Text(
+                                                  getTranslated('deliver_to', context).toUpperCase(),
+                                                  style: poppinsBold.copyWith(
+                                                    fontSize: 8,
+                                                    color: Theme.of(context).disabledColor,
+                                                    letterSpacing: 0.8,
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 1),
+                                                Text(
+                                                  splash.selectedBranchName,
+                                                  style: poppinsBold.copyWith(
+                                                    fontSize: 12,
+                                                    color: Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black87,
+                                                  ),
+                                                  maxLines: 1,
+                                                  overflow: TextOverflow.ellipsis,
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Icon(
+                                            Icons.keyboard_arrow_down_rounded,
+                                            color: Theme.of(context).primaryColor,
+                                            size: 18,
+                                          ),
+                                        ],
+                                      ),
                                     ),
-                                  ),
                                 )
                               : Text(
                                   getTranslated(

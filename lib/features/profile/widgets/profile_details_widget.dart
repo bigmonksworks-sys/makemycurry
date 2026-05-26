@@ -13,83 +13,136 @@ class ProfileDetailsWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Consumer<ProfileProvider>(builder: (context, profileProvider, _) {
-      return profileProvider.isLoading
-          ? CustomLoaderWidget(color: Theme.of(context).primaryColor)
-          : Center(
-              child: Container(
-                width: Dimensions.webScreenWidth * 0.7,
-                padding: const EdgeInsets.all(Dimensions.paddingSizeLarge),
+      if (profileProvider.isLoading) {
+        return CustomLoaderWidget(color: Theme.of(context).primaryColor);
+      }
+      final user = profileProvider.userInfoModel;
+      if (user == null) return const SizedBox.shrink();
+
+      return Center(
+        child: Container(
+          width: ResponsiveHelper.isDesktop(context) 
+              ? Dimensions.webScreenWidth * 0.7 
+              : double.infinity,
+          padding: const EdgeInsets.symmetric(
+            horizontal: Dimensions.paddingSizeLarge,
+            vertical: Dimensions.paddingSizeSmall,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Section Title
+              Padding(
+                padding: const EdgeInsets.only(left: 4.0, bottom: Dimensions.paddingSizeSmall),
+                child: Text(
+                  getTranslated('personal_info', context) ?? 'Personal Information',
+                  style: poppinsSemiBold.copyWith(
+                    fontSize: Dimensions.fontSizeLarge,
+                    color: Theme.of(context).textTheme.bodyLarge?.color,
+                  ),
+                ),
+              ),
+              
+              Container(
+                decoration: BoxDecoration(
+                  color: Theme.of(context).cardColor,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: Theme.of(context).primaryColor.withValues(alpha: 0.15),
+                    width: 1.5,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.03),
+                      blurRadius: 16,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    ResponsiveHelper.isDesktop(context)
-                        ? Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                                Text(
-                                  getTranslated('name', context),
-                                  style: poppinsRegular.copyWith(
-                                      fontSize: Dimensions.fontSizeExtraSmall,
-                                      color: Theme.of(context)
-                                          .hintColor
-                                          .withValues(alpha: 0.6)),
-                                ),
-                                const SizedBox(height: 6),
-                                Text(
-                                  '${profileProvider.userInfoModel?.fName ?? ''} ${profileProvider.userInfoModel!.lName ?? ''}',
-                                  style: poppinsRegular.copyWith(
-                                      fontSize: Dimensions.fontSizeDefault),
-                                ),
-                                const Divider(),
-                              ])
-                        : Center(
-                            child: Text(
-                            '${profileProvider.userInfoModel?.fName ?? ''} ${profileProvider.userInfoModel?.lName ?? ''}',
-                            style: poppinsMedium.copyWith(
-                                fontSize: Dimensions.fontSizeExtraLarge),
-                          )),
-                    const SizedBox(height: 30),
-
-                    // for first name section
-                    Text(
-                      getTranslated('mobile_number', context),
-                      style: poppinsRegular.copyWith(
-                          fontSize: Dimensions.fontSizeExtraSmall,
-                          color: Theme.of(context)
-                              .hintColor
-                              .withValues(alpha: 0.6)),
+                    _buildInfoTile(
+                      context,
+                      icon: Icons.person_outline_rounded,
+                      label: getTranslated('name', context),
+                      value: '${user.fName ?? ''} ${user.lName ?? ''}',
                     ),
-                    const SizedBox(height: 6),
-
-                    Text(
-                      profileProvider.userInfoModel!.phone ?? '',
-                      style: poppinsRegular.copyWith(
-                          fontSize: Dimensions.fontSizeDefault),
+                    _buildDivider(context),
+                    _buildInfoTile(
+                      context,
+                      icon: Icons.phone_android_rounded,
+                      label: getTranslated('mobile_number', context),
+                      value: user.phone ?? '',
                     ),
-                    const Divider(),
-
-                    const SizedBox(height: Dimensions.paddingSizeExtraLarge),
-                    Text(
-                      getTranslated('email', context),
-                      style: poppinsRegular.copyWith(
-                          fontSize: Dimensions.fontSizeExtraSmall,
-                          color: Theme.of(context)
-                              .hintColor
-                              .withValues(alpha: 0.6)),
+                    _buildDivider(context),
+                    _buildInfoTile(
+                      context,
+                      icon: Icons.email_outlined,
+                      label: getTranslated('email', context),
+                      value: user.email ?? '',
                     ),
-                    const SizedBox(height: 6),
-
-                    Text(
-                      profileProvider.userInfoModel?.email ?? '',
-                      style: poppinsRegular.copyWith(
-                          fontSize: Dimensions.fontSizeDefault),
-                    ),
-                    const Divider(),
-                    const SizedBox(height: Dimensions.paddingSizeExtraLarge),
                   ],
                 ),
               ),
-            );
+            ],
+          ),
+        ),
+      );
     });
+  }
+
+  Widget _buildInfoTile(BuildContext context, {required IconData icon, required String label, required String value}) {
+    return Padding(
+      padding: const EdgeInsets.all(Dimensions.paddingSizeLarge),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Theme.of(context).primaryColor.withValues(alpha: 0.08),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              icon,
+              color: Theme.of(context).primaryColor,
+              size: 22,
+            ),
+          ),
+          const SizedBox(width: Dimensions.paddingSizeDefault),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: poppinsRegular.copyWith(
+                    fontSize: Dimensions.fontSizeExtraSmall,
+                    color: Theme.of(context).hintColor.withValues(alpha: 0.7),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  value,
+                  style: poppinsMedium.copyWith(
+                    fontSize: Dimensions.fontSizeDefault,
+                    color: Theme.of(context).textTheme.bodyLarge?.color,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDivider(BuildContext context) {
+    return Divider(
+      height: 1,
+      thickness: 1,
+      indent: 70,
+      endIndent: 20,
+      color: Theme.of(context).dividerColor.withValues(alpha: 0.5),
+    );
   }
 }

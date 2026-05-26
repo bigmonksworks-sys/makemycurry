@@ -48,16 +48,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
               preferredSize: Size.fromHeight(120), child: WebAppBarWidget())
           : AppBar(
               backgroundColor: Theme.of(context).cardColor,
+              elevation: 0,
+              centerTitle: true,
               leading: IconButton(
-                  icon: Icon(Icons.arrow_back_ios,
-                      color: Theme.of(context).primaryColor, size: 25),
+                  icon: Icon(Icons.arrow_back_ios_rounded,
+                      color: Theme.of(context).primaryColor, size: 20),
                   onPressed: () {
                     splashProvider.setPageIndex(0);
                     Navigator.of(context).pop();
                   }),
               title: Text(getTranslated('profile', context),
                   style: poppinsMedium.copyWith(
-                    fontSize: Dimensions.fontSizeSmall,
+                    fontSize: Dimensions.fontSizeLarge,
                     color: Theme.of(context).textTheme.bodyLarge!.color,
                   )),
             ),

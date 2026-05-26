@@ -217,103 +217,182 @@ class _NearbyBranchBottomSheetState extends State<NearbyBranchBottomSheet> {
                             return Container(
                               margin: const EdgeInsets.only(bottom: 14),
                               decoration: BoxDecoration(
+                                gradient: isSelected
+                                    ? LinearGradient(
+                                        colors: [
+                                          Theme.of(context).primaryColor.withOpacity(0.08),
+                                          Theme.of(context).primaryColor.withOpacity(0.02),
+                                        ],
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
+                                      )
+                                    : null,
                                 color: isSelected 
-                                  ? Theme.of(context).primaryColor.withOpacity(0.06) 
-                                  : Theme.of(context).cardColor.withOpacity(0.5),
+                                    ? null 
+                                    : Theme.of(context).cardColor.withOpacity(0.5),
                                 border: Border.all(
                                   color: isSelected 
-                                    ? Theme.of(context).primaryColor 
-                                    : Theme.of(context).dividerColor.withOpacity(0.5),
-                                  width: isSelected ? 1.8 : 1,
+                                      ? Theme.of(context).primaryColor 
+                                      : Theme.of(context).dividerColor.withOpacity(0.3),
+                                  width: isSelected ? 1.8 : 1.2,
                                 ),
-                                borderRadius: BorderRadius.circular(16),
+                                borderRadius: BorderRadius.circular(18),
+                                boxShadow: isSelected
+                                    ? [
+                                        BoxShadow(
+                                          color: Theme.of(context).primaryColor.withOpacity(0.08),
+                                          blurRadius: 12,
+                                          offset: const Offset(0, 4),
+                                        )
+                                      ]
+                                    : [
+                                        BoxShadow(
+                                          color: Colors.black.withOpacity(0.02),
+                                          blurRadius: 6,
+                                          offset: const Offset(0, 2),
+                                        )
+                                      ],
                               ),
-                              child: ListTile(
-                                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                              child: InkWell(
                                 onTap: isAvailable ? () {
                                   splashProvider.updateSelectedBranch(branch.id!, branch.name!);
                                   Navigator.pop(context);
                                 } : null,
-                                title: Row(
-                                  children: [
-                                    Expanded(
-                                      child: Text(
-                                        branch.name ?? '',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 16,
-                                          color: isAvailable ? null : Theme.of(context).disabledColor,
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                      decoration: BoxDecoration(
-                                        color: isAvailable 
-                                          ? Colors.green.withOpacity(0.1) 
-                                          : Colors.red.withOpacity(0.1),
-                                        borderRadius: BorderRadius.circular(6),
-                                      ),
-                                      child: Text(
-                                        isAvailable ? 'Available' : 'Outside Range',
-                                        style: TextStyle(
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.bold,
-                                          color: isAvailable ? Colors.green : Colors.red,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                subtitle: Padding(
-                                  padding: const EdgeInsets.only(top: 6.0),
+                                borderRadius: BorderRadius.circular(18),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(16.0),
                                   child: Row(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      Icon(Icons.location_on_outlined, size: 14, color: Theme.of(context).hintColor),
-                                      const SizedBox(width: 4),
-                                      Expanded(
-                                        child: Text(
-                                          branch.address ?? '',
-                                          style: TextStyle(
-                                            fontSize: 13,
-                                            color: isAvailable ? Theme.of(context).hintColor : Theme.of(context).disabledColor,
-                                          ),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
+                                      // Left indicator dot or map pin
+                                      Container(
+                                        padding: const EdgeInsets.all(8),
+                                        decoration: BoxDecoration(
+                                          color: isSelected
+                                              ? Theme.of(context).primaryColor.withOpacity(0.12)
+                                              : (isAvailable ? Colors.green.withOpacity(0.06) : Colors.red.withOpacity(0.06)),
+                                          shape: BoxShape.circle,
                                         ),
+                                        child: Icon(
+                                          Icons.storefront_rounded,
+                                          color: isSelected
+                                              ? Theme.of(context).primaryColor
+                                              : (isAvailable ? Colors.green : Colors.red),
+                                          size: 20,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 14),
+
+                                      // Middle Details
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Row(
+                                              children: [
+                                                Flexible(
+                                                  child: Text(
+                                                    branch.name ?? '',
+                                                    style: TextStyle(
+                                                      fontWeight: FontWeight.bold,
+                                                      fontSize: 16,
+                                                      color: isAvailable
+                                                          ? Theme.of(context).textTheme.bodyLarge?.color
+                                                          : Theme.of(context).disabledColor,
+                                                    ),
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 8),
+                                                Container(
+                                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                                  decoration: BoxDecoration(
+                                                    color: isAvailable
+                                                        ? Colors.green.withOpacity(0.1)
+                                                        : Colors.red.withOpacity(0.1),
+                                                    borderRadius: BorderRadius.circular(6),
+                                                  ),
+                                                  child: Text(
+                                                    isAvailable ? 'Available' : 'Outside Range',
+                                                    style: TextStyle(
+                                                      fontSize: 10,
+                                                      fontWeight: FontWeight.bold,
+                                                      color: isAvailable ? Colors.green : Colors.red,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            const SizedBox(height: 6),
+                                            Row(
+                                              children: [
+                                                Icon(Icons.location_on_outlined, size: 14, color: Theme.of(context).hintColor),
+                                                const SizedBox(width: 4),
+                                                Expanded(
+                                                  child: Text(
+                                                    branch.address ?? '',
+                                                    style: TextStyle(
+                                                      fontSize: 13,
+                                                      color: isAvailable
+                                                          ? Theme.of(context).hintColor
+                                                          : Theme.of(context).disabledColor,
+                                                    ),
+                                                    maxLines: 1,
+                                                    overflow: TextOverflow.ellipsis,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+
+                                      // Right info (Distance / Time / Checkmark)
+                                      Column(
+                                        crossAxisAlignment: CrossAxisAlignment.end,
+                                        children: [
+                                          Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Text(
+                                                '${branch.distanceKm?.toStringAsFixed(1) ?? '0.0'} km',
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 15,
+                                                  color: isAvailable
+                                                      ? Theme.of(context).textTheme.bodyLarge?.color
+                                                      : Theme.of(context).disabledColor,
+                                                ),
+                                              ),
+                                              if (isSelected) ...[
+                                                const SizedBox(width: 6),
+                                                Icon(
+                                                  Icons.check_circle_rounded,
+                                                  color: Theme.of(context).primaryColor,
+                                                  size: 16,
+                                                ),
+                                              ]
+                                            ],
+                                          ),
+                                          const SizedBox(height: 6),
+                                          Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Icon(Icons.access_time, size: 12, color: Theme.of(context).hintColor),
+                                              const SizedBox(width: 3),
+                                              Text(
+                                                '${branch.estimatedDeliveryTime ?? 30}m',
+                                                style: TextStyle(
+                                                  fontSize: 12,
+                                                  color: Theme.of(context).hintColor,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
                                       ),
                                     ],
                                   ),
-                                ),
-                                trailing: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                  children: [
-                                    Text(
-                                      '${branch.distanceKm?.toStringAsFixed(1) ?? '0.0'} km',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 15,
-                                        color: isAvailable ? null : Theme.of(context).disabledColor,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Icon(Icons.access_time, size: 12, color: Theme.of(context).hintColor),
-                                        const SizedBox(width: 3),
-                                        Text(
-                                          '${branch.estimatedDeliveryTime ?? 30}m',
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            color: Theme.of(context).hintColor,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
                                 ),
                               ),
                             );

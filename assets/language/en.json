@@ -678,7 +678,7 @@
   "payment_method_unavailable_talk_to_admin": "This payment method is currently unavailable. Please contact with admin.",
   "welcome_back": "Welcome Back!",
   "enter_mobile_number_to_login": "Enter your mobile number to login",
-  "select_variant_option": "Select Option",
+  "select_variant_option": "Sub Items",
   "loyalty_level": "Loyalty Level",
   "completed_orders": "Completed Orders",
   "next_level": "next level"
