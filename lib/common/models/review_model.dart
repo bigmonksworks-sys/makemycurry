@@ -89,7 +89,7 @@ class Review {
     productId = json['product_id'];
     userId = json['user_id'];
     comment = json['comment'];
-    attachment = json['attachment'].cast<String>();
+    attachment = json['attachment']?.cast<String>();
     rating = json['rating'];
     createdAt = json['created_at'];
     updatedAt = json['updated_at'];

@@ -48,12 +48,16 @@ class ReviewProvider extends ChangeNotifier {
   }
 
   void setRating(int index, int rate) {
-    _ratingList[index] = rate;
-    notifyListeners();
+    if (index < _ratingList.length) {
+      _ratingList[index] = rate;
+      notifyListeners();
+    }
   }
 
   void setReview(int index, String review) {
-    _reviewList[index] = review;
+    if (index < _reviewList.length) {
+      _reviewList[index] = review;
+    }
   }
 
   void setDeliveryManRating(int rate) {

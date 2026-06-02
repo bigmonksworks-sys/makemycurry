@@ -39,14 +39,25 @@ class _RateReviewScreenState extends State<RateReviewScreen> with TickerProvider
 
         Center(child: Container(
             width: Dimensions.webScreenWidth,
-            color: Theme.of(context).cardColor,
+            decoration: BoxDecoration(
+              color: Theme.of(context).cardColor,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.03),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
             child: TabBar(
               controller: _tabController,
-              labelColor: Theme.of(context).textTheme.bodyLarge!.color,
+              labelColor: Theme.of(context).primaryColor,
+              unselectedLabelColor: Theme.of(context).hintColor,
               indicatorColor: Theme.of(context).primaryColor,
+              indicatorSize: TabBarIndicatorSize.tab,
               indicatorWeight: 3,
-              unselectedLabelStyle: poppinsRegular.copyWith(color: Theme.of(context).hintColor.withValues(alpha: 0.6), fontSize: Dimensions.fontSizeSmall),
-              labelStyle: poppinsMedium.copyWith(fontSize: Dimensions.fontSizeSmall),
+              unselectedLabelStyle: poppinsRegular.copyWith(color: Theme.of(context).hintColor.withValues(alpha: 0.6), fontSize: Dimensions.fontSizeDefault),
+              labelStyle: poppinsSemiBold.copyWith(fontSize: Dimensions.fontSizeDefault),
               tabs: [
                 Tab(text: getTranslated(widget.orderDetailsList.length > 1 ? 'items' : 'item', context)),
 

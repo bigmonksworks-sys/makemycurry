@@ -203,9 +203,40 @@ class ProductProvider extends ChangeNotifier {
     }
     ApiResponseModel apiResponse =
         await productRepo.getProductReviews(productId: id, offset: offset);
-    if (apiResponse.response!.statusCode == 200) {
-      final Reviews tempReviews =
-          Reviews.fromJson(apiResponse.response!.data["reviews"]);
+    if (apiResponse.response != null && apiResponse.response!.statusCode == 200) {
+      final dynamic responseData = apiResponse.response!.data;
+      Reviews tempReviews;
+      if (responseData is List) {
+        List<Review> list = [];
+        for (var v in responseData) {
+          list.add(Review.fromJson(v));
+        }
+        tempReviews = Reviews(
+          reviewList: list,
+          totalSize: list.length,
+          limit: 10,
+          offset: offset,
+        );
+      } else if (responseData is Map) {
+        if (responseData["reviews"] is Map) {
+          tempReviews = Reviews.fromJson(responseData["reviews"]);
+        } else if (responseData["reviews"] is List) {
+          List<Review> list = [];
+          for (var v in responseData["reviews"]) {
+            list.add(Review.fromJson(v));
+          }
+          tempReviews = Reviews(
+            reviewList: list,
+            totalSize: int.tryParse('${responseData["total_size"]}') ?? list.length,
+            limit: int.tryParse('${responseData["limit"]}') ?? 10,
+            offset: int.tryParse('${responseData["offset"]}') ?? (offset ?? 1),
+          );
+        } else {
+          tempReviews = Reviews.fromJson(responseData as Map<String, dynamic>);
+        }
+      } else {
+        tempReviews = Reviews(reviewList: [], totalSize: 0, limit: 10, offset: offset);
+      }
       if (offset == 1) {
         _productReviews = tempReviews;
       } else {

@@ -195,8 +195,8 @@ class ProductDescriptionWidget extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Text('${productProvider.product!.rating!.isNotEmpty
-                        ? productProvider.product!.rating!.first.average!.toStringAsFixed(1) : 0.0}',
+                    Text('${(productProvider.product?.rating != null && productProvider.product!.rating!.isNotEmpty)
+                        ? (productProvider.product!.rating!.first.average ?? 0.0).toStringAsFixed(1) : 0.0}',
                         style: poppinsRegular.copyWith(
                           fontSize: ResponsiveHelper.isDesktop(context) ? 35 : Dimensions.fontSizeMaxLarge,
                           fontWeight: FontWeight.w700,
@@ -205,14 +205,14 @@ class ProductDescriptionWidget extends StatelessWidget {
                     //const SizedBox(height: Dimensions.paddingSizeExtraSmall),
 
                     RatingBarWidget(
-                      rating: productProvider.product!.rating!.isNotEmpty
-                          ? productProvider.product!.rating![0].average!
+                      rating: (productProvider.product?.rating != null && productProvider.product!.rating!.isNotEmpty)
+                          ? (productProvider.product!.rating![0].average ?? 0.0)
                           : 0.0, size: Dimensions.paddingSizeLarge,
                     ),
                     const SizedBox(height: Dimensions.paddingSizeExtraSmall),
 
                     Text(
-                      '${productProvider.product!.activeReviews!.length} ${getTranslated('review', context)}',
+                      '${productProvider.product?.activeReviews?.length ?? 0} ${getTranslated('review', context)}',
                       style: poppinsRegular.copyWith(fontSize: Dimensions.fontSizeDefault, color: Theme.of(context).textTheme.bodyLarge?.color?.withValues(alpha: 0.60)),
                     ),
 
@@ -234,27 +234,43 @@ class ProductDescriptionWidget extends StatelessWidget {
           if(ResponsiveHelper.isDesktop(context))
             SizedBox(height: Dimensions.fontSizeMaxLarge),
 
-          PaginatedListWidget(
-            scrollController: scrollController,
-            offset: productProvider.productReviews?.offset,
-            totalSize: productProvider.productReviews?.totalSize,
-            limit: productProvider.productReviews?.limit,
-            loaderBottomMargin: 70,
-            onPaginate: (int? offset) async {
-             await productProvider.getProductReviews(id: productProvider.product?.id.toString(), offset: offset);
-            },
-            itemView: ListView.builder(
-              itemCount: productProvider.productReviews?.reviewList?.length,
-              physics: const NeverScrollableScrollPhysics(),
-              shrinkWrap: true,
-              padding: EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeSmall),
-              itemBuilder: (context, index) {
-                return productProvider.productReviews?.reviewList != null ? ProductReviewWidget(
-                  review: productProvider.productReviews?.reviewList![index],
-                ) : const ReviewShimmer();
-              },
-            ),
-          ),
+          productProvider.productReviews?.reviewList != null && productProvider.productReviews!.reviewList!.isEmpty
+              ? Container(
+                  padding: const EdgeInsets.symmetric(vertical: Dimensions.paddingSizeExtraLarge),
+                  alignment: Alignment.center,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.rate_review_outlined, size: 50, color: Theme.of(context).disabledColor.withValues(alpha: 0.8)),
+                      const SizedBox(height: Dimensions.paddingSizeSmall),
+                      Text(
+                        getTranslated('no_reviews_found', context),
+                        style: poppinsMedium.copyWith(color: Theme.of(context).disabledColor, fontSize: Dimensions.fontSizeLarge),
+                      ),
+                    ],
+                  ),
+                )
+              : PaginatedListWidget(
+                  scrollController: scrollController,
+                  offset: productProvider.productReviews?.offset,
+                  totalSize: productProvider.productReviews?.totalSize,
+                  limit: productProvider.productReviews?.limit,
+                  loaderBottomMargin: 70,
+                  onPaginate: (int? offset) async {
+                   await productProvider.getProductReviews(id: productProvider.product?.id.toString(), offset: offset);
+                  },
+                  itemView: ListView.builder(
+                    itemCount: productProvider.productReviews?.reviewList?.length ?? 3,
+                    physics: const NeverScrollableScrollPhysics(),
+                    shrinkWrap: true,
+                    padding: EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeSmall),
+                    itemBuilder: (context, index) {
+                      return productProvider.productReviews?.reviewList != null ? ProductReviewWidget(
+                        review: productProvider.productReviews?.reviewList![index],
+                      ) : const ReviewShimmer();
+                    },
+                  ),
+                ),
         ]) ,
       ]);
     });

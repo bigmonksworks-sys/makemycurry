@@ -4,9 +4,9 @@ import 'package:flutter_grocery/features/order/domain/models/review_body_model.d
 import 'package:flutter_grocery/features/order/domain/models/order_model.dart';
 import 'package:flutter_grocery/features/review/providers/review_provider.dart';
 import 'package:flutter_grocery/localization/language_constraints.dart';
-import 'package:flutter_grocery/common/providers/theme_provider.dart';
 import 'package:flutter_grocery/utill/dimensions.dart';
 import 'package:flutter_grocery/utill/styles.dart';
+import 'package:flutter_grocery/utill/color_resources.dart';
 import 'package:flutter_grocery/common/widgets/custom_button_widget.dart';
 import 'package:flutter_grocery/helper/custom_snackbar_helper.dart';
 import 'package:flutter_grocery/common/widgets/custom_text_field_widget.dart';
@@ -40,25 +40,28 @@ class _DeliveryManReviewWidgetState extends State<DeliveryManReviewWidget> {
               widget.deliveryMan != null ? DeliveryManWidget(deliveryMan: widget.deliveryMan) : const SizedBox(),
               const SizedBox(height: Dimensions.paddingSizeLarge),
 
-              Container(
-                padding: const EdgeInsets.all(Dimensions.paddingSizeSmall),
+               Container(
+                padding: const EdgeInsets.all(Dimensions.paddingSizeDefault),
                 decoration: BoxDecoration(
                   color: Theme.of(context).cardColor,
-                  borderRadius: BorderRadius.circular(10),
-                  boxShadow: [BoxShadow(
-                    color: Colors.grey[Provider.of<ThemeProvider>(context).darkTheme ? 700 : 300]!,
-                    blurRadius: 5, spreadRadius: 1,
-                  )],
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.04),
+                      blurRadius: 16,
+                      offset: const Offset(0, 8),
+                    )
+                  ],
+                  border: Border.all(color: Theme.of(context).primaryColor.withValues(alpha: 0.06), width: 1.5),
                 ),
                 child: Column(children: [
                   Text(
                     getTranslated('rate_his_service', context),
-                    style: poppinsMedium.copyWith(color: Theme.of(context).textTheme.bodyLarge?.color?.withValues(alpha: 0.6)),
-                    overflow: TextOverflow.ellipsis,
+                    style: poppinsSemiBold.copyWith(fontSize: Dimensions.fontSizeLarge),
                   ),
                   const SizedBox(height: Dimensions.paddingSizeSmall),
 
-                  SizedBox(height: 30, child: ListView.builder(
+                  SizedBox(height: 40, child: ListView.builder(
                     itemCount: 5,
                     shrinkWrap: true,
                     scrollDirection: Axis.horizontal,
@@ -67,12 +70,15 @@ class _DeliveryManReviewWidgetState extends State<DeliveryManReviewWidget> {
                         onTap: reviewProvider.deliverymanReviewSubmitted ? null :  () {
                           reviewProvider.setDeliveryManRating(i + 1);
                         },
-                        child: Icon(
-                          reviewProvider.deliveryManRating < (i + 1) ? Icons.star_border : Icons.star,
-                          size: 25,
-                          color: reviewProvider.deliveryManRating < (i + 1)
-                              ? Theme.of(context).textTheme.bodyLarge?.color?.withValues(alpha: 0.6)
-                              : Theme.of(context).primaryColor,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 6),
+                          child: Icon(
+                            reviewProvider.deliveryManRating < (i + 1) ? Icons.star_border_rounded : Icons.star_rounded,
+                            size: 36,
+                            color: reviewProvider.deliveryManRating < (i + 1)
+                                ? Theme.of(context).hintColor.withValues(alpha: 0.3)
+                                : ColorResources.ratingColor,
+                          ),
                         ),
                       );
                     },
@@ -81,22 +87,19 @@ class _DeliveryManReviewWidgetState extends State<DeliveryManReviewWidget> {
 
                   Text(
                     getTranslated('share_your_opinion', context),
-                    overflow: TextOverflow.ellipsis,
-                    style: poppinsMedium.copyWith(
-                      color: Theme.of(context).textTheme.bodyLarge?.color?.withValues(alpha: 0.6),
-                    ),
+                    style: poppinsSemiBold.copyWith(fontSize: Dimensions.fontSizeLarge),
                   ),
-                  const SizedBox(height: Dimensions.paddingSizeLarge),
+                  const SizedBox(height: Dimensions.paddingSizeSmall),
 
                   CustomTextFieldWidget(
-                    maxLines: 5,
+                    maxLines: 4,
                     isEnabled: !reviewProvider.deliverymanReviewSubmitted,
                     capitalization: TextCapitalization.sentences,
                     controller: _controller,
                     hintText: getTranslated('write_your_review_here', context),
                     fillColor: Theme.of(context).cardColor,
                   ),
-                  const SizedBox(height: 40),
+                  const SizedBox(height: Dimensions.paddingSizeLarge),
 
                   // Submit button
                   Padding(
@@ -105,6 +108,7 @@ class _DeliveryManReviewWidgetState extends State<DeliveryManReviewWidget> {
                       CustomButtonWidget(
                         isLoading: reviewProvider.isLoading,
                         buttonText: getTranslated( reviewProvider.deliverymanReviewSubmitted ? 'submitted' : 'submit', context),
+                        borderRadius: 30,
                         onPressed: reviewProvider.deliverymanReviewSubmitted ? null : () {
                           if (reviewProvider.deliveryManRating == 0) {
                             showCustomSnackBarHelper(getTranslated('give_a_rating', context));

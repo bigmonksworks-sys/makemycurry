@@ -5,6 +5,7 @@ import 'package:flutter_grocery/common/providers/product_provider.dart';
 import 'package:flutter_grocery/utill/dimensions.dart';
 import 'package:flutter_grocery/utill/styles.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_grocery/common/models/product_model.dart';
 
 
 class RatingLineWidget extends StatelessWidget {
@@ -21,26 +22,30 @@ class RatingLineWidget extends StatelessWidget {
         int twoStar = 0;
         int oneStar = 0;
 
-        for (var review in productProvider.product!.activeReviews!) {
-          if(review.rating! >= 4.5){
-            fiveStar++;
-          }else if(review.rating! >= 3.5 && review.rating! < 4.5) {
-            fourStar++;
-          }else if(review.rating! >= 2.5 && review.rating! < 3.5) {
-            threeStar++;
-          }else if(review.rating! >= 1.5 && review.rating! < 12.5){
-            twoStar++;
-          }else{
-            oneStar++;
+        final List<ActiveReview> activeReviews = productProvider.product?.activeReviews ?? [];
+        for (var review in activeReviews) {
+          if (review.rating != null) {
+            if(review.rating! >= 4.5){
+              fiveStar++;
+            }else if(review.rating! >= 3.5 && review.rating! < 4.5) {
+              fourStar++;
+            }else if(review.rating! >= 2.5 && review.rating! < 3.5) {
+              threeStar++;
+            }else if(review.rating! >= 1.5 && review.rating! < 2.5){
+              twoStar++;
+            }else{
+              oneStar++;
+            }
           }
         }
 
 
-        double five = (fiveStar * 100) / 5;
-        double four = (fourStar * 100) / 4;
-        double three = (threeStar * 100) / 3;
-        double two = (twoStar * 100) / 2;
-        double one = (oneStar * 100) / 1;
+        int totalReviews = activeReviews.isNotEmpty ? activeReviews.length : 1;
+        double five = (fiveStar * 100) / totalReviews;
+        double four = (fourStar * 100) / totalReviews;
+        double three = (threeStar * 100) / totalReviews;
+        double two = (twoStar * 100) / totalReviews;
+        double one = (oneStar * 100) / totalReviews;
 
         return Column(children: [
           
