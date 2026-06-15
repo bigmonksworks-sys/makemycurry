@@ -8,7 +8,7 @@
     The path provided below has to start and end with a slash "/" in order for
     it to work correctly.
 
-    Fore more details:
+    For more details:
     * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
   -->
   <base href="/">
@@ -39,29 +39,26 @@
 
   <style>.grecaptcha-badge { visibility: hidden;} </style>
 
-  <script>
-    // The value below is injected by flutter build, do not touch.
-    var serviceWorkerVersion = {{flutter_service_worker_version}};
-  </script>
+
   <!-- This script adds the flutter initialization JS code -->
-  <script src="flutter.js?version=7.7" defer></script>
+  <script src="flutter.js" defer></script>
 
 </head>
 <body>
 
 
-<script src="https://maps.googleapis.com/maps/api/js?key=YOUR_MAP_KEY_HERE&callback=Function.prototype"></script>
+<script src="https://maps.googleapis.com/maps/api/js?key=YOUR_MAP_KEY_HERE&callback=Function.prototype" async defer></script>
 
 <script type="application/javascript" src="/assets/packages/flutter_inappwebview_web/assets/web/web_support.js" defer></script>
 
 
 
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js" defer></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js" defer></script>
 
 <div class="preloader">
   <div class="preloader-container">
-    <img width="55" class="preloader-img" src="assets/preloader.svg" alt="">
+    <img width="100" class="preloader-img" src="assets/preloader.svg" alt="">
     <div class="loader"></div>
   </div>
 </div>

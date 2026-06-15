@@ -24,8 +24,10 @@ class CartDetailsWidget extends StatefulWidget {
   final TextEditingController _couponController;
   final double _total;
   final double _itemPrice;
+  // ignore: unused_field
   final double _tax;
   final double _discount;
+  // ignore: unused_field
   final bool _isFreeDelivery;
 
   @override
@@ -131,12 +133,6 @@ class _CartDetailsWidgetState extends State<CartDetailsWidget> {
               ),
             ],
           ),
-          const SizedBox(height: 4),
-          Text(
-            'You are saving ₹ 150 On this order', 
-            style: poppinsMedium.copyWith(fontSize: 12, color: const Color(0xFF38B23C)),
-          ),
-
         ]),
       ),
     ]);

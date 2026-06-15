@@ -15,9 +15,17 @@ class CartHelper {
     double? categoryDiscountAmount;
     double? priceWithDiscount;
 
+    double? capacity = product.capacity;
+    String? unit = product.unit;
+
     if (selectedSubVariant != null) {
       price = selectedSubVariant.price;
       stock = selectedSubVariant.stock;
+      if (selectedSubVariant.attributes != null && selectedSubVariant.attributes is Map) {
+        final map = selectedSubVariant.attributes as Map;
+        capacity = double.tryParse(map['capacity']?.toString() ?? '');
+        unit = map['unit']?.toString();
+      }
     } else {
       for(int index = 0; index < (product.choiceOptions?.length ?? 0); index++) {
         if(product.choiceOptions?[index].options?.isNotEmpty ?? false) {
@@ -78,7 +86,7 @@ class CartHelper {
       quantity, variation,
       (price! - priceWithDiscount!),
       (price- PriceConverterHelper.convertWithDiscount(price, product.tax, product.taxType)!),
-      product.capacity, product.unit, stock, product,
+      capacity, unit, stock, product,
       selectedSubVariant?.id,
     );
 

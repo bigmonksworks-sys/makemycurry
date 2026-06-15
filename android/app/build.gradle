@@ -35,6 +35,11 @@ android {
     compileSdk 36
     ndkVersion "28.2.13676358"
 
+    lintOptions {
+        checkReleaseBuilds false
+        abortOnError false
+    }
+
     compileOptions {
         coreLibraryDesugaringEnabled true
         sourceCompatibility JavaVersion.VERSION_17

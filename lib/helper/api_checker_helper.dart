@@ -13,7 +13,8 @@ class ApiCheckerHelper {
   static void checkApi(ApiResponseModel apiResponse) {
     ErrorResponseModel error = getError(apiResponse);
 
-    if ((error.errors?[0].code == '401' ||
+    if (error.errors != null && error.errors!.isNotEmpty &&
+        (error.errors![0].code == '401' ||
         error.errors![0].code == 'auth-001' &&
             ModalRoute.of(Get.context!)?.settings.name !=
                 RouteHelper.getLoginRoute())) {
@@ -24,23 +25,23 @@ class ApiCheckerHelper {
           MaterialPageRoute(builder: (_) => const LoginScreen()),
           (route) => false);
     } else {
-      showCustomSnackBarHelper(
-          getTranslated(error.errors?.first.message, Get.context!));
+      String? errorMessage = (error.errors != null && error.errors!.isNotEmpty)
+          ? error.errors!.first.message
+          : 'Something went wrong';
+      showCustomSnackBarHelper(getTranslated(errorMessage, Get.context!));
     }
   }
 
   static ErrorResponseModel getError(ApiResponseModel apiResponse) {
     ErrorResponseModel error;
 
-    try {
-      error = ErrorResponseModel.fromJson(apiResponse);
-    } catch (e) {
-      if (apiResponse.error != null) {
-        error = ErrorResponseModel.fromJson(apiResponse.error);
-      } else {
-        error = ErrorResponseModel(
-            errors: [Errors(code: '', message: apiResponse.error.toString())]);
-      }
+    if (apiResponse.error != null) {
+      error = ErrorResponseModel.fromJson(apiResponse.error);
+    } else if (apiResponse.response?.data != null) {
+      error = ErrorResponseModel.fromJson(apiResponse.response!.data);
+    } else {
+      error = ErrorResponseModel(
+          errors: [Errors(code: '', message: 'Something went wrong')]);
     }
     return error;
   }

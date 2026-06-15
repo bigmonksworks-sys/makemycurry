@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_grocery/common/models/cart_model.dart';
+import 'package:flutter_grocery/common/models/product_model.dart';
 import 'package:flutter_grocery/common/providers/cart_provider.dart';
 import 'package:flutter_grocery/common/widgets/custom_image_widget.dart';
 import 'package:flutter_grocery/features/coupon/providers/coupon_provider.dart';
@@ -20,8 +21,22 @@ class CartItemWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final CartProvider cartProvider = Provider.of<CartProvider>(context, listen: false);
-    String? variationText = _getVariationValue();
 
+    SubVariant? selectedSubVariant;
+    if (cart.subVariantId != null && cart.product?.subVariants != null) {
+      try {
+        selectedSubVariant = cart.product!.subVariants!.firstWhere((element) => element.id == cart.subVariantId);
+      } catch (_) {}
+    }
+
+    String? displayUnit = cart.unit;
+    if (selectedSubVariant != null && selectedSubVariant.attributes != null && selectedSubVariant.attributes is Map) {
+      final map = selectedSubVariant.attributes as Map;
+      final String subUnit = map['unit']?.toString() ?? '';
+      if (subUnit.isNotEmpty) {
+        displayUnit = subUnit;
+      }
+    }
 
     return Container(
       margin: const EdgeInsets.only(bottom: Dimensions.paddingSizeDefault),
@@ -49,7 +64,7 @@ class CartItemWidget extends StatelessWidget {
               ClipRRect(
                 borderRadius: BorderRadius.circular(12),
                 child: CustomImageWidget(
-                  image: '${Provider.of<SplashProvider>(context, listen: false).baseUrls!.productImageUrl}/${cart.image}',
+                  image: '${Provider.of<SplashProvider>(context, listen: false).baseUrls!.productImageUrl}/${(selectedSubVariant != null && selectedSubVariant.image != null && selectedSubVariant.image!.isNotEmpty) ? selectedSubVariant.image : cart.image}',
                   height: 100,
                   width: 100,
                   fit: BoxFit.cover,
@@ -66,7 +81,22 @@ class CartItemWidget extends StatelessWidget {
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    if ((cart.capacity != null && cart.capacity! > 0) || (cart.product?.weight != null && cart.product!.weight! > 0))
+                    if (selectedSubVariant != null) ...[
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4.0),
+                        child: Text(
+                          'Variant: ${selectedSubVariant.name ?? ""}',
+                          style: poppinsMedium.copyWith(fontSize: 14, color: Colors.black54),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(top: 2.0),
+                        child: Text(
+                          'Net : ${_getAttributesText(cart.product!, selectedSubVariant)}',
+                          style: poppinsMedium.copyWith(fontSize: 14, color: Colors.black54),
+                        ),
+                      ),
+                    ] else if ((cart.capacity != null && cart.capacity! > 0) || (cart.product?.weight != null && cart.product!.weight! > 0))
                       Padding(
                         padding: const EdgeInsets.only(top: 8.0),
                         child: Text(
@@ -78,10 +108,23 @@ class CartItemWidget extends StatelessWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          PriceConverterHelper.convertPrice(context, cart.discountedPrice ?? 0),
-                          style: poppinsBold.copyWith(fontSize: 20, color: Colors.black),
+                        Flexible(
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Flexible(
+                                child: FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  child: Text(
+                                    PriceConverterHelper.convertPrice(context, cart.discountedPrice ?? 0),
+                                    style: poppinsBold.copyWith(fontSize: 20, color: Colors.black),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
+                        const SizedBox(width: Dimensions.paddingSizeExtraSmall),
                         // Quantity Picker
                         Container(
                           padding: const EdgeInsets.all(2),
@@ -113,7 +156,7 @@ class CartItemWidget extends StatelessWidget {
                               Padding(
                                 padding: const EdgeInsets.symmetric(horizontal: 10),
                                 child: Text(
-                                  '${cart.quantity}${cart.unit ?? ''}',
+                                  '${cart.quantity}${displayUnit != null && displayUnit.isNotEmpty ? ' ${_getShortUnit(displayUnit)}' : ''}',
                                   style: poppinsMedium.copyWith(fontSize: 14, color: Colors.black),
                                 ),
                               ),
@@ -151,22 +194,44 @@ class CartItemWidget extends StatelessWidget {
     );
   }
 
-  String? _getVariationValue() {
-    String? variationText = '';
-    if(cart.variation != null ) {
-      List<String> variationTypes = cart.variation?.type?.split('-') ?? [];
-      if(variationTypes.length == cart.product?.choiceOptions?.length) {
-        int index = 0;
-        for (var choice in cart.product?.choiceOptions ?? []) {
-          variationText = '$variationText${(index == 0) ? '' : ',  '}${choice.title} - ${variationTypes[index]}';
-          index = index + 1;
-        }
-      }else {
-        variationText = cart.product?.variations?[0].type;
-      }
-    }
 
-    return variationText;
+  String _getAttributesText(Product product, SubVariant subVariant) {
+    if (subVariant.attributes == null) {
+      return '';
+    }
+    if (subVariant.attributes is Map) {
+      final map = subVariant.attributes as Map;
+      final String unit = map['unit']?.toString() ?? '';
+      final String capacity = map['capacity']?.toString() ?? '';
+      if (unit.toLowerCase() == 'gram' || unit.toLowerCase() == 'gm') {
+        return '${capacity}g';
+      } else if (unit.isNotEmpty) {
+        return '$capacity $unit';
+      }
+      return capacity;
+    }
+    return '';
+  }
+
+  String _getShortUnit(String? unit) {
+    if (unit == null) return '';
+    final lower = unit.toLowerCase().trim();
+    if (lower == 'packet' || lower == 'packets' || lower == 'pack') {
+      return 'pkt';
+    }
+    if (lower == 'piece' || lower == 'pieces' || lower == 'pc') {
+      return 'pcs';
+    }
+    if (lower == 'gram' || lower == 'grams' || lower == 'gm' || lower == 'g') {
+      return 'g';
+    }
+    if (lower == 'kilogram' || lower == 'kilograms' || lower == 'kg') {
+      return 'kg';
+    }
+    if (lower == 'litre' || lower == 'litres' || lower == 'ltr' || lower == 'l') {
+      return 'l';
+    }
+    return unit;
   }
 
 }

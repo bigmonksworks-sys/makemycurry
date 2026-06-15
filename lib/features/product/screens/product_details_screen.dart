@@ -43,13 +43,18 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen>  with Ticke
   int _tabIndex = 0;
   bool showSeeMoreButton = true;
   final ScrollController scrollController = ScrollController();
-  SubVariant? _selectedSubVariant;
+  final Map<int, int> _selectedSubVariants = {};
+  bool _isSubVariantsInitialized = false;
 
   @override
   void initState() {
 
     final ProductProvider productProvider = Provider.of(context, listen: false);
-    productProvider.getProductDetails('${widget.productId}', searchQuery: widget.fromSearch!);
+    productProvider.getProductDetails('${widget.productId}', searchQuery: widget.fromSearch!).then((product) {
+      if (product == null && mounted) {
+        Navigator.pop(context);
+      }
+    });
     Provider.of<CartProvider>(context, listen: false).getCartData();
     Provider.of<CartProvider>(context, listen: false).onSelectProductStatus(0, false);
 
@@ -71,25 +76,60 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen>  with Ticke
           builder: (context, productProvider, child) {
             double? priceWithQuantity = 0;
             CartModel? cartModel;
+            SubVariant? lastSelectedSubVariant;
             if(productProvider.product != null) {
+              if (!_isSubVariantsInitialized) {
+                if (productProvider.product!.subVariants != null && productProvider.product!.subVariants!.isNotEmpty) {
+                  for (var cartItem in cartProvider.cartList) {
+                    if (cartItem.id == productProvider.product!.id && cartItem.subVariantId != null) {
+                      _selectedSubVariants[cartItem.subVariantId!] = cartItem.quantity ?? 1;
+                    }
+                  }
+                }
+                _isSubVariantsInitialized = true;
+              }
 
+              if (_selectedSubVariants.isNotEmpty && productProvider.product!.subVariants != null) {
+                int lastId = _selectedSubVariants.keys.last;
+                lastSelectedSubVariant = productProvider.product!.subVariants!.cast<SubVariant?>().firstWhere((element) => element?.id == lastId, orElse: () => null);
+              }
 
-              cartModel = CartHelper.getCartModel(productProvider.product!, quantity: cartProvider.quantity, variationIndexList: cartProvider.variationIndex, selectedSubVariant: _selectedSubVariant);
-
-              cartProvider.setExistData(cartProvider.isExistInCart(cartModel));
+              cartModel = CartHelper.getCartModel(productProvider.product!, quantity: cartProvider.quantity, variationIndexList: cartProvider.variationIndex, selectedSubVariant: lastSelectedSubVariant);
 
               double? priceWithDiscount = PriceConverterHelper.convertWithDiscount(
                 cartModel?.price, productProvider.product?.discount,
                 productProvider.product?.discountType,
               );
 
-
-              if(cartProvider.cartIndex != null) {
-                priceWithQuantity = (priceWithDiscount ?? 0) * (cartProvider.cartList[cartProvider.cartIndex!].quantity!);
-
-              }else {
-                priceWithQuantity = (priceWithDiscount ?? 0) * cartProvider.quantity;
-
+              if (productProvider.product!.subVariants != null && productProvider.product!.subVariants!.isNotEmpty) {
+                if (_selectedSubVariants.isNotEmpty) {
+                  cartProvider.setExistData(null);
+                  priceWithQuantity = 0;
+                  _selectedSubVariants.forEach((subVariantId, qty) {
+                    final sub = productProvider.product!.subVariants!.cast<SubVariant?>().firstWhere((element) => element?.id == subVariantId, orElse: () => null);
+                    if (sub != null) {
+                      double? subPriceWithDiscount = PriceConverterHelper.convertWithDiscount(
+                        sub.price, productProvider.product?.discount,
+                        productProvider.product?.discountType,
+                      );
+                      priceWithQuantity = priceWithQuantity! + ((subPriceWithDiscount ?? 0) * qty);
+                    }
+                  });
+                } else {
+                  cartProvider.setExistData(cartProvider.isExistInCart(cartModel));
+                  if (cartProvider.cartIndex != null) {
+                    priceWithQuantity = (priceWithDiscount ?? 0) * (cartProvider.cartList[cartProvider.cartIndex!].quantity!);
+                  } else {
+                    priceWithQuantity = (priceWithDiscount ?? 0) * cartProvider.quantity;
+                  }
+                }
+              } else {
+                cartProvider.setExistData(cartProvider.isExistInCart(cartModel));
+                if(cartProvider.cartIndex != null) {
+                  priceWithQuantity = (priceWithDiscount ?? 0) * (cartProvider.cartList[cartProvider.cartIndex!].quantity!);
+                } else {
+                  priceWithQuantity = (priceWithDiscount ?? 0) * cartProvider.quantity;
+                }
               }
             }
 
@@ -106,13 +146,25 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen>  with Ticke
                         children: [
 
                           Column(children: [
-                            ProductImageWidget(productModel: productProvider.product, selectedSubVariant: _selectedSubVariant),
+                            ProductImageWidget(
+                              productModel: productProvider.product,
+                              selectedSubVariant: () {
+                                if (_selectedSubVariants.isEmpty || productProvider.product!.subVariants == null) return null;
+                                return productProvider.product!.subVariants!.cast<SubVariant?>().firstWhere((element) => element?.id == _selectedSubVariants.keys.last, orElse: () => null);
+                              }(),
+                            ),
 
                             // SelectedImageWidget has been removed as per the mockup. The ProductImageWidget handles dots.
 
-                            ProductTitleWidget(product: productProvider.product, stock: cartModel?.stock, cartIndex: cartProvider.cartIndex),
+                            ProductTitleWidget(
+                              selectedSubVariant: null,
+                              product: productProvider.product,
+                              stock: (productProvider.product!.subVariants != null && productProvider.product!.subVariants!.isNotEmpty) ? null : cartModel?.stock,
+                              cartIndex: (productProvider.product!.subVariants != null && productProvider.product!.subVariants!.isNotEmpty) ? null : cartProvider.cartIndex,
+                            ),
 
-                            VariationWidget(product: productProvider.product),
+                            if (productProvider.product?.subVariants == null || productProvider.product!.subVariants!.isEmpty)
+                              VariationWidget(product: productProvider.product),
                             _buildSubVariantSelector(productProvider.product!),
 
                             Padding(
@@ -136,45 +188,46 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen>  with Ticke
                                 ]),
                                 SizedBox(height: ResponsiveHelper.isDesktop(context) ? 45 : 0),
 
-                                Builder(
-                                    builder: (context) {
-                                      return Container(
-                                        padding: const EdgeInsets.all(4),
-                                        decoration: BoxDecoration(
-                                          color: Colors.white,
-                                          border: Border.all(color: Colors.black12, width: 1),
-                                          borderRadius: BorderRadius.circular(50),
-                                        ),
-
-                                        child: Row(children: [
-                                          QuantityButtonWidget(
-                                            isIncrement: false, quantity: cartProvider.quantity,
-                                            stock: cartModel?.stock, cartIndex: cartProvider.cartIndex,
-                                            maxOrderQuantity: productProvider.product!.maximumOrderQuantity,
-                                            backgroundColor: Colors.white,
-                                            iconColor: Colors.black87,
-                                            radius: 50,
+                                if (productProvider.product?.subVariants == null || productProvider.product!.subVariants!.isEmpty || _selectedSubVariants.isEmpty)
+                                  Builder(
+                                      builder: (context) {
+                                        return Container(
+                                          padding: const EdgeInsets.all(4),
+                                          decoration: BoxDecoration(
+                                            color: Colors.white,
+                                            border: Border.all(color: Colors.black12, width: 1),
+                                            borderRadius: BorderRadius.circular(50),
                                           ),
-                                          const SizedBox(width: 15),
 
-                                          Text(
-                                            (cartProvider.cartIndex != null ? cartProvider.cartList[cartProvider.cartIndex!].quantity : cartProvider.quantity).toString().padLeft(2, '0'),
-                                            style: poppinsMedium.copyWith(color: Colors.black, fontSize: Dimensions.fontSizeLarge),
-                                          ),
-                                          const SizedBox(width: 15),
+                                          child: Row(children: [
+                                            QuantityButtonWidget(
+                                              isIncrement: false, quantity: cartProvider.quantity,
+                                              stock: cartModel?.stock, cartIndex: cartProvider.cartIndex,
+                                              maxOrderQuantity: productProvider.product!.maximumOrderQuantity,
+                                              backgroundColor: Colors.white,
+                                              iconColor: Colors.black87,
+                                              radius: 50,
+                                            ),
+                                            const SizedBox(width: 15),
 
-                                          QuantityButtonWidget(
-                                            isIncrement: true, quantity: cartProvider.quantity,
-                                            stock: cartModel?.stock, cartIndex: cartProvider.cartIndex,
-                                            maxOrderQuantity: productProvider.product!.maximumOrderQuantity,
-                                            backgroundColor: const Color(0xFF0F1E29),
-                                            iconColor: Colors.white,
-                                            radius: 50,
-                                          ),
-                                        ]),
-                                      );
-                                    }
-                                ),
+                                            Text(
+                                              (cartProvider.cartIndex != null ? cartProvider.cartList[cartProvider.cartIndex!].quantity : cartProvider.quantity).toString().padLeft(2, '0'),
+                                              style: poppinsMedium.copyWith(color: Colors.black, fontSize: Dimensions.fontSizeLarge),
+                                            ),
+                                            const SizedBox(width: 15),
+
+                                            QuantityButtonWidget(
+                                              isIncrement: true, quantity: cartProvider.quantity,
+                                              stock: cartModel?.stock, cartIndex: cartProvider.cartIndex,
+                                              maxOrderQuantity: productProvider.product!.maximumOrderQuantity,
+                                              backgroundColor: const Color(0xFF0F1E29),
+                                              iconColor: Colors.white,
+                                              radius: 50,
+                                            ),
+                                          ]),
+                                        );
+                                      }
+                                  ),
 
                               ]),
                             ),
@@ -225,24 +278,38 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen>  with Ticke
                     borderRadius: 30,
                     margin: Dimensions.paddingSizeSmall,
                     buttonText: getTranslated(
-                      cartProvider.cartIndex != null 
-                          ? 'already_added' 
-                          : (cartModel?.stock ?? 0) <= 0 
-                              ? 'out_of_stock' 
-                              : 'add_to_card', 
+                      (productProvider.product?.subVariants != null && productProvider.product!.subVariants!.isNotEmpty && _selectedSubVariants.isNotEmpty)
+                          ? 'add_to_card'
+                          : (cartProvider.cartIndex != null 
+                              ? 'already_added' 
+                              : (cartModel?.stock ?? 0) <= 0 
+                                  ? 'out_of_stock' 
+                                  : 'add_to_card'), 
                       context
                     ),
-                  onPressed: (cartProvider.cartIndex == null && (cartModel?.stock ?? 0) > 0) ? () {
-                    if (cartProvider.cartIndex == null && (cartModel?.stock ?? 0) > 0) {
-                      cartProvider.addToCart(cartModel!);
-
-
-                      showCustomSnackBarHelper(getTranslated('added_to_cart', context), isError: false);
-
-                    } else {
-                      showCustomSnackBarHelper(getTranslated('already_added', context));
-                    }
-                  } : null,
+                  onPressed: (productProvider.product?.subVariants != null && productProvider.product!.subVariants!.isNotEmpty && _selectedSubVariants.isNotEmpty)
+                      ? () {
+                          List<CartModel> cartModels = [];
+                          _selectedSubVariants.forEach((subVariantId, qty) {
+                            final sub = productProvider.product!.subVariants!.cast<SubVariant?>().firstWhere((element) => element?.id == subVariantId, orElse: () => null);
+                            if (sub != null) {
+                              final cartModel = CartHelper.getCartModel(productProvider.product!, quantity: qty, selectedSubVariant: sub);
+                              if (cartModel != null) {
+                                cartModels.add(cartModel);
+                              }
+                            }
+                          });
+                          cartProvider.addMultipleToCart(cartModels);
+                          showCustomSnackBarHelper(getTranslated('added_to_cart', context), isError: false);
+                        }
+                      : ((cartProvider.cartIndex == null && (cartModel?.stock ?? 0) > 0) ? () {
+                          if (cartProvider.cartIndex == null && (cartModel?.stock ?? 0) > 0) {
+                            cartProvider.addToCart(cartModel!);
+                            showCustomSnackBarHelper(getTranslated('added_to_cart', context), isError: false);
+                          } else {
+                            showCustomSnackBarHelper(getTranslated('already_added', context));
+                          }
+                        } : null),
                 ))),
               ],
             ) : CustomScrollView(
@@ -270,8 +337,8 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen>  with Ticke
                                         image: ClipRRect(
                                           borderRadius: BorderRadius.circular(Dimensions.radiusSizeTen),
                                           child: CustomImageWidget(
-                                            image: (_selectedSubVariant != null && _selectedSubVariant!.image != null && _selectedSubVariant!.image!.isNotEmpty)
-                                                ? '${splashProvider.baseUrls?.productImageUrl}/${_selectedSubVariant!.image}'
+                                            image: (lastSelectedSubVariant != null && lastSelectedSubVariant.image != null && lastSelectedSubVariant.image!.isNotEmpty)
+                                                ? '${splashProvider.baseUrls?.productImageUrl}/${lastSelectedSubVariant.image}'
                                                 : '${splashProvider.baseUrls?.productImageUrl}/${(productProvider.product?.image?.isNotEmpty ?? false)
                                                     ? productProvider.product!.image![cartProvider.productSelect] : ''}',
                                             fit: BoxFit.cover,
@@ -281,7 +348,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen>  with Ticke
 
                                       Positioned(
                                         top: 10, right: 10,
-                                        child: WishButtonWidget(product: productProvider.product, subVariantId: _selectedSubVariant?.id, edgeInset: const EdgeInsets.all(Dimensions.paddingSizeExtraSmall)),
+                                        child: WishButtonWidget(product: productProvider.product, subVariantId: lastSelectedSubVariant?.id, edgeInset: const EdgeInsets.all(Dimensions.paddingSizeExtraSmall)),
                                       ),
                                     ],
                                   ),
@@ -304,9 +371,15 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen>  with Ticke
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
 
-                                  ProductTitleWidget(product: productProvider.product, stock: cartModel?.stock, cartIndex: cartProvider.cartIndex),
+                                  ProductTitleWidget(
+                                    product: productProvider.product,
+                                    stock: (productProvider.product!.subVariants != null && productProvider.product!.subVariants!.isNotEmpty) ? null : cartModel?.stock,
+                                    cartIndex: (productProvider.product!.subVariants != null && productProvider.product!.subVariants!.isNotEmpty) ? null : cartProvider.cartIndex,
+                                    selectedSubVariant: null,
+                                  ),
 
-                                  VariationWidget(product: productProvider.product),
+                                  if (productProvider.product?.subVariants == null || productProvider.product!.subVariants!.isEmpty)
+                                    VariationWidget(product: productProvider.product),
                                   _buildSubVariantSelector(productProvider.product!),
                                   SizedBox(height: Dimensions.paddingSizeLarge),
 
@@ -330,40 +403,42 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen>  with Ticke
 
                                   Row(children: [
 
-                                    Builder(
-                                        builder: (context) {
-                                          return Container(
-                                            padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeSmall, vertical: Dimensions.paddingSizeExtraSmall),
-                                            decoration: BoxDecoration(
-                                              color: Theme.of(context).disabledColor.withValues(alpha: 0.05),
-                                              borderRadius: BorderRadius.circular(Dimensions.radiusSizeSmall),
-                                            ),
+                                     if (productProvider.product?.subVariants == null || productProvider.product!.subVariants!.isEmpty || _selectedSubVariants.isEmpty)
+                                       Builder(
+                                           builder: (context) {
+                                             return Container(
+                                               padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeSmall, vertical: Dimensions.paddingSizeExtraSmall),
+                                               decoration: BoxDecoration(
+                                                 color: Theme.of(context).disabledColor.withValues(alpha: 0.05),
+                                                 borderRadius: BorderRadius.circular(Dimensions.radiusSizeSmall),
+                                               ),
 
-                                            child: Row(children: [
-                                              QuantityButtonWidget(
-                                                isIncrement: false, quantity: cartProvider.quantity,
-                                                stock: cartModel?.stock, cartIndex: cartProvider.cartIndex,
-                                                maxOrderQuantity: productProvider.product!.maximumOrderQuantity,
-                                              ),
-                                              const SizedBox(width: 15),
+                                               child: Row(children: [
+                                                 QuantityButtonWidget(
+                                                   isIncrement: false, quantity: cartProvider.quantity,
+                                                   stock: cartModel?.stock, cartIndex: cartProvider.cartIndex,
+                                                   maxOrderQuantity: productProvider.product!.maximumOrderQuantity,
+                                                 ),
+                                                 const SizedBox(width: 15),
 
-                                              Consumer<CartProvider>(builder: (context, cart, child) {
-                                                return Text(cart.cartIndex != null ? cart.cartList[cart.cartIndex!].quantity.toString()
-                                                    : cart.quantity.toString(), style: poppinsBold.copyWith(color: Theme.of(context).primaryColor)
-                                                );
-                                              }),
-                                              const SizedBox(width: 15),
+                                                 Consumer<CartProvider>(builder: (context, cart, child) {
+                                                   return Text(cart.cartIndex != null ? cart.cartList[cart.cartIndex!].quantity.toString()
+                                                       : cart.quantity.toString(), style: poppinsBold.copyWith(color: Theme.of(context).primaryColor)
+                                                   );
+                                                 }),
+                                                 const SizedBox(width: 15),
 
-                                              QuantityButtonWidget(
-                                                isIncrement: true, quantity: cartProvider.quantity,
-                                                stock: cartModel?.stock, cartIndex: cartProvider.cartIndex,
-                                                maxOrderQuantity: productProvider.product?.maximumOrderQuantity,
-                                              ),
-                                            ]),
-                                          );
-                                        }
-                                    ),
-                                    const SizedBox(width: Dimensions.paddingSizeDefault),
+                                                 QuantityButtonWidget(
+                                                   isIncrement: true, quantity: cartProvider.quantity,
+                                                   stock: cartModel?.stock, cartIndex: cartProvider.cartIndex,
+                                                   maxOrderQuantity: productProvider.product!.maximumOrderQuantity,
+                                                 ),
+                                               ]),
+                                             );
+                                           }
+                                       ),
+                                     if (productProvider.product?.subVariants == null || productProvider.product!.subVariants!.isEmpty || _selectedSubVariants.isEmpty)
+                                       const SizedBox(width: Dimensions.paddingSizeDefault),
 
                                     Builder(
                                       builder: (context) => Center(
@@ -372,23 +447,38 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen>  with Ticke
                                           child: CustomButtonWidget(
                                             icon: Icons.shopping_cart,
                                             buttonText: getTranslated(
-                                              cartProvider.cartIndex != null 
-                                                  ? 'already_added' 
-                                                  : (cartModel?.stock ?? 0) <= 0 
-                                                      ? 'out_of_stock' 
-                                                      : 'add_to_card', 
+                                              (productProvider.product?.subVariants != null && productProvider.product!.subVariants!.isNotEmpty && _selectedSubVariants.isNotEmpty)
+                                                  ? 'add_to_card'
+                                                  : (cartProvider.cartIndex != null 
+                                                      ? 'already_added' 
+                                                      : (cartModel?.stock ?? 0) <= 0 
+                                                          ? 'out_of_stock' 
+                                                          : 'add_to_card'), 
                                               context
                                             ),
-                                            onPressed: (cartProvider.cartIndex == null && (cartModel?.stock ?? 0) > 0) ? () {
-                                              if (cartProvider.cartIndex == null && (cartModel?.stock ?? 0) > 0) {
-                                                cartProvider.addToCart(cartModel!);
-
-                                                showCustomSnackBarHelper(getTranslated('added_to_cart', context), isError: false);
-
-                                              } else {
-                                                showCustomSnackBarHelper(getTranslated('already_added', context));
-                                              }
-                                            } : null,
+                                            onPressed: (productProvider.product?.subVariants != null && productProvider.product!.subVariants!.isNotEmpty && _selectedSubVariants.isNotEmpty)
+                                                ? () {
+                                                    List<CartModel> cartModels = [];
+                                                    _selectedSubVariants.forEach((subVariantId, qty) {
+                                                      final sub = productProvider.product!.subVariants!.cast<SubVariant?>().firstWhere((element) => element?.id == subVariantId, orElse: () => null);
+                                                      if (sub != null) {
+                                                        final cartModel = CartHelper.getCartModel(productProvider.product!, quantity: qty, selectedSubVariant: sub);
+                                                        if (cartModel != null) {
+                                                          cartModels.add(cartModel);
+                                                        }
+                                                      }
+                                                    });
+                                                    cartProvider.addMultipleToCart(cartModels);
+                                                    showCustomSnackBarHelper(getTranslated('added_to_cart', context), isError: false);
+                                                  }
+                                                : ((cartProvider.cartIndex == null && (cartModel?.stock ?? 0) > 0) ? () {
+                                                    if (cartProvider.cartIndex == null && (cartModel?.stock ?? 0) > 0) {
+                                                      cartProvider.addToCart(cartModel!);
+                                                      showCustomSnackBarHelper(getTranslated('added_to_cart', context), isError: false);
+                                                    } else {
+                                                      showCustomSnackBarHelper(getTranslated('already_added', context));
+                                                    }
+                                                  } : null),
                                           ),
                                         ),
                                       ),
@@ -448,11 +538,11 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen>  with Ticke
               getTranslated('select_variant_option', context), 
               style: poppinsSemiBold.copyWith(fontSize: Dimensions.fontSizeLarge, color: Colors.black)
             ),
-            if (_selectedSubVariant != null)
+            if (_selectedSubVariants.isNotEmpty)
               TextButton(
                 onPressed: () {
                   setState(() {
-                    _selectedSubVariant = null;
+                    _selectedSubVariants.clear();
                   });
                 },
                 child: Text(
@@ -465,13 +555,14 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen>  with Ticke
         const SizedBox(height: Dimensions.paddingSizeSmall),
         
         SizedBox(
-          height: 245,
+          height: 285,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             itemCount: product.subVariants!.length,
             itemBuilder: (context, index) {
               final subVariant = product.subVariants![index];
-              bool isSelected = _selectedSubVariant?.id == subVariant.id;
+              bool isSelected = _selectedSubVariants.containsKey(subVariant.id);
+              final int quantity = _selectedSubVariants[subVariant.id] ?? 0;
               final String variantImage = (subVariant.image != null && subVariant.image!.isNotEmpty)
                   ? subVariant.image!
                   : ((product.image != null && product.image!.isNotEmpty) ? product.image![0] : '');
@@ -487,14 +578,40 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen>  with Ticke
                   onTap: () {
                     setState(() {
                       if (isSelected) {
-                        _selectedSubVariant = null;
+                        _selectedSubVariants.remove(subVariant.id);
                       } else {
-                        _selectedSubVariant = subVariant;
+                        if ((subVariant.stock ?? 0) > 0) {
+                          _selectedSubVariants[subVariant.id!] = 1;
+                        } else {
+                          showCustomSnackBarHelper(getTranslated('out_of_stock', context));
+                        }
                       }
                     });
                   },
-                  child: SizedBox(
+                  child: Container(
                     width: 154,
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(15),
+                      color: Theme.of(context).cardColor,
+                      border: Border.all(
+                        color: isSelected ? Theme.of(context).primaryColor : Colors.black.withOpacity(0.08),
+                        width: isSelected ? 2 : 1,
+                      ),
+                      boxShadow: isSelected ? [
+                        BoxShadow(
+                          color: Theme.of(context).primaryColor.withOpacity(0.15),
+                          blurRadius: 8,
+                          spreadRadius: 1,
+                        )
+                      ] : [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.03),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
+                        )
+                      ],
+                    ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -502,31 +619,13 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen>  with Ticke
                           clipBehavior: Clip.none,
                           children: [
                             Container(
-                              height: 120,
+                              height: 110,
                               width: double.infinity,
                               decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(15),
-                                color: Theme.of(context).cardColor,
-                                border: Border.all(
-                                  color: isSelected ? Theme.of(context).primaryColor : Colors.black.withValues(alpha: 0.08),
-                                  width: isSelected ? 2 : 1,
-                                ),
-                                boxShadow: isSelected ? [
-                                  BoxShadow(
-                                    color: Theme.of(context).primaryColor.withValues(alpha: 0.15),
-                                    blurRadius: 8,
-                                    spreadRadius: 1,
-                                  )
-                                ] : [
-                                  BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.03),
-                                    blurRadius: 4,
-                                    offset: const Offset(0, 2),
-                                  )
-                                ],
+                                borderRadius: BorderRadius.circular(12),
                               ),
                               child: ClipRRect(
-                                borderRadius: BorderRadius.circular(13),
+                                borderRadius: BorderRadius.circular(12),
                                 child: CustomImageWidget(
                                   image: '${Provider.of<SplashProvider>(context, listen: false).baseUrls!.productImageUrl}/$variantImage',
                                   fit: BoxFit.cover,
@@ -547,7 +646,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen>  with Ticke
                                     color: isSelected ? Theme.of(context).primaryColor : Colors.white,
                                     width: 2,
                                   ),
-                                  color: isSelected ? Theme.of(context).primaryColor : Colors.black.withValues(alpha: 0.3),
+                                  color: isSelected ? Theme.of(context).primaryColor : Colors.black.withOpacity(0.3),
                                 ),
                                 child: isSelected 
                                     ? const Icon(Icons.check, size: 14, color: Colors.white) 
@@ -563,7 +662,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen>  with Ticke
                                 product: product,
                                 subVariantId: subVariant.id,
                                 edgeInset: const EdgeInsets.all(4),
-                                color: Colors.black.withValues(alpha: 0.4),
+                                color: Colors.black.withOpacity(0.4),
                               ),
                             ),
 
@@ -628,14 +727,14 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen>  with Ticke
                                 right: 0,
                                 child: Container(
                                   decoration: BoxDecoration(
-                                    color: Colors.black.withValues(alpha: 0.4),
+                                    color: Colors.black.withOpacity(0.4),
                                     borderRadius: BorderRadius.circular(15),
                                   ),
                                   child: Center(
                                     child: Container(
                                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
                                       decoration: BoxDecoration(
-                                        color: Colors.red.withValues(alpha: 0.8),
+                                        color: Colors.red.withOpacity(0.8),
                                         borderRadius: BorderRadius.circular(8),
                                       ),
                                       child: Text(
@@ -671,60 +770,92 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen>  with Ticke
                             overflow: TextOverflow.ellipsis,
                           ),
                         ],
-                        const SizedBox(height: 2),
-                        if (subVariant.mrp != null && subVariant.mrp! > (subVariant.price ?? 0)) ...[
-                          RichText(
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            text: TextSpan(
-                              children: [
-                                TextSpan(
-                                  text: '${getTranslated('mrp', context)}: ',
-                                  style: poppinsRegular.copyWith(fontSize: 10, color: const Color(0xFF888888)),
-                                ),
-                                TextSpan(
-                                  text: PriceConverterHelper.convertPrice(context, subVariant.mrp),
-                                  style: poppinsRegular.copyWith(
-                                    fontSize: 11,
-                                    color: const Color(0xFF888888),
-                                    decoration: TextDecoration.lineThrough,
-                                  ),
-                                ),
-                              ]
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                        ],
                         RichText(
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           text: TextSpan(
                             children: [
-                              if (subVariant.mrp != null && subVariant.mrp! > (subVariant.price ?? 0))
-                                TextSpan(
-                                  text: '${getTranslated('our_price', context)}: ',
-                                  style: poppinsMedium.copyWith(fontSize: 10, color: Colors.black54),
-                                ),
                               TextSpan(
                                 text: PriceConverterHelper.convertPrice(context, subVariant.price),
                                 style: poppinsSemiBold.copyWith(fontSize: 14, color: Colors.black),
                               ),
                               TextSpan(
-                                text: '/${product.unit}',
+                                text: '/${_getSubVariantUnit(product, subVariant)}',
                                 style: poppinsRegular.copyWith(fontSize: 12, color: const Color(0xFF888888)),
                               ),
                             ]
                           ),
                         ),
-                        const SizedBox(height: 2),
-                        // if ((subVariant.stock ?? 0) > 0)
-                        //   Text(
-                        //     '${getTranslated('stock', context)}: ${subVariant.stock}',
-                        //     style: poppinsRegular.copyWith(
-                        //       fontSize: Dimensions.fontSizeExtraSmall,
-                        //       color: Colors.green,
-                        //     ),
-                        //   ),
+                        const SizedBox(height: 8),
+                        if (isSelected)
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              InkWell(
+                                onTap: () {
+                                  setState(() {
+                                    if (_selectedSubVariants[subVariant.id]! > 1) {
+                                      _selectedSubVariants[subVariant.id!] = _selectedSubVariants[subVariant.id]! - 1;
+                                    } else {
+                                      _selectedSubVariants.remove(subVariant.id);
+                                    }
+                                  });
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.all(4),
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: Theme.of(context).primaryColor.withOpacity(0.1),
+                                  ),
+                                  child: Icon(Icons.remove, size: 14, color: Theme.of(context).primaryColor),
+                                ),
+                              ),
+                              Text('$quantity', style: poppinsMedium.copyWith(fontSize: 14, color: Colors.black)),
+                              InkWell(
+                                onTap: () {
+                                  if (quantity < (subVariant.stock ?? 0)) {
+                                    setState(() {
+                                      _selectedSubVariants[subVariant.id!] = quantity + 1;
+                                    });
+                                  } else {
+                                    showCustomSnackBarHelper(getTranslated('out_of_stock', context));
+                                  }
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.all(4),
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: Theme.of(context).primaryColor,
+                                  ),
+                                  child: const Icon(Icons.add, size: 14, color: Colors.white),
+                                ),
+                              ),
+                            ],
+                          )
+                        else if ((subVariant.stock ?? 0) > 0)
+                          InkWell(
+                            onTap: () {
+                              setState(() {
+                                _selectedSubVariants[subVariant.id!] = 1;
+                              });
+                            },
+                            child: Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.symmetric(vertical: 4),
+                              decoration: BoxDecoration(
+                                color: Theme.of(context).primaryColor.withOpacity(0.08),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Text(
+                                getTranslated('add', context),
+                                textAlign: TextAlign.center,
+                                style: poppinsSemiBold.copyWith(
+                                  fontSize: 12,
+                                  color: Theme.of(context).primaryColor,
+                                ),
+                              ),
+                            ),
+                          ),
                       ],
                     ),
                   ),
@@ -741,40 +872,32 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen>  with Ticke
     if (subVariant.attributes == null) {
       return '';
     }
-    List<String> list = [];
     if (subVariant.attributes is Map) {
-      (subVariant.attributes as Map).forEach((key, value) {
-        String choiceName = 'choice_options_$key';
-        ChoiceOptions? choice;
-        try {
-          choice = product.choiceOptions?.firstWhere((element) => element.name == choiceName);
-        } catch (_) {}
-        if (choice != null && choice.title != null && choice.title!.isNotEmpty) {
-          list.add('${choice.title}: $value');
-        } else {
-          list.add('$value');
+      final map = subVariant.attributes as Map;
+      final String unit = map['unit']?.toString() ?? '';
+      final String capacity = map['capacity']?.toString() ?? '';
+      if (unit.toLowerCase() == 'gram' || unit.toLowerCase() == 'gm') {
+        return '${capacity}g';
+      } else if (unit.isNotEmpty) {
+        return '$capacity $unit';
+      }
+      return capacity;
+    }
+    return '';
+  }
+
+  String _getSubVariantUnit(Product product, SubVariant subVariant) {
+    if (subVariant.attributes != null && subVariant.attributes is Map) {
+      final map = subVariant.attributes as Map;
+      final String unit = map['unit']?.toString() ?? '';
+      if (unit.isNotEmpty) {
+        if (unit.toLowerCase() == 'gram' || unit.toLowerCase() == 'gm') {
+          return 'gm';
         }
-      });
-    } else if (subVariant.attributes is List) {
-      // If it is encoded as a list
-      for (var item in subVariant.attributes) {
-        if (item is Map) {
-          item.forEach((key, value) {
-            String choiceName = 'choice_options_$key';
-            ChoiceOptions? choice;
-            try {
-              choice = product.choiceOptions?.firstWhere((element) => element.name == choiceName);
-            } catch (_) {}
-            if (choice != null && choice.title != null && choice.title!.isNotEmpty) {
-              list.add('${choice.title}: $value');
-            } else {
-              list.add('$value');
-            }
-          });
-        }
+        return unit.toLowerCase();
       }
     }
-    return list.join(', ');
+    return product.unit ?? '';
   }
 }
 

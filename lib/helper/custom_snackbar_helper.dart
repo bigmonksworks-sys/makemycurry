@@ -8,9 +8,9 @@ import 'package:flutter_grocery/utill/styles.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 
 void showCustomSnackBarHelper(String message, {bool isError = true, Duration? duration, Widget? content, EdgeInsetsGeometry? margin, Color? backgroundColor, EdgeInsetsGeometry? padding}) {
-  ScaffoldMessenger.of(Get.context!).clearSnackBars();
+  scaffoldMessengerKey.currentState?.clearSnackBars();
   final double width = MediaQuery.of(Get.context!).size.width;
-  ScaffoldMessenger.of(Get.context!)..hideCurrentSnackBar()..showSnackBar(SnackBar(key: UniqueKey(), content: content ??  Text(message, style: poppinsLight.copyWith(color: Colors.white),),
+  scaffoldMessengerKey.currentState?.showSnackBar(SnackBar(key: UniqueKey(), content: content ??  Text(message, style: poppinsLight.copyWith(color: Colors.white),),
       margin: ResponsiveHelper.isDesktop(Get.context!) ? margin ??  EdgeInsets.only(
         right: width * 0.75, bottom: Dimensions.paddingSizeLarge, left: Dimensions.paddingSizeExtraSmall,
       ) : null,

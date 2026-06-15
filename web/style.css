@@ -70,7 +70,7 @@
   background-color: #82CAB6;
 }
 .header .logo {
-  max-block-size: 2.315rem;
+  max-block-size: 3.5rem;
 }
 @media (max-width: 1024px) {
   .header {

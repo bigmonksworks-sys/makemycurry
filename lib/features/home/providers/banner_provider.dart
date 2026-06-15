@@ -51,7 +51,7 @@ class BannerProvider extends ChangeNotifier {
     if (apiResponse.response != null && apiResponse.response!.statusCode == 200) {
       _productList.add(Product.fromJson(apiResponse.response!.data));
     } else {
-      ApiCheckerHelper.checkApi(apiResponse);
+      debugPrint('Failed to load banner product with ID: $productID');
     }
   }
 }

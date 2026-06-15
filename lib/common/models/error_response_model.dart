@@ -11,11 +11,22 @@ class ErrorResponseModel {
   }
 
   ErrorResponseModel.fromJson(dynamic json) {
-    if (json?["errors"] != null) {
+    if (json == null) {
+      _errors = null;
+    } else if (json is Map && json["errors"] != null && json["errors"] is List) {
       _errors = [];
       json["errors"].forEach((v) {
         _errors!.add(Errors.fromJson(v));
       });
+    } else if (json is Map && json["errors"] != null && json["errors"] is Map) {
+      _errors = [Errors.fromJson(json["errors"])];
+    } else if (json is Map) {
+      String message = json["message"]?.toString() ?? json["msg"]?.toString() ?? json.toString();
+      _errors = [Errors(code: '', message: message)];
+    } else if (json is String) {
+      _errors = [Errors(code: '', message: json)];
+    } else {
+      _errors = [Errors(code: '', message: json.toString())];
     }
   }
 

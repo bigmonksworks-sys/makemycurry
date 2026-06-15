@@ -7,64 +7,50 @@ import 'package:flutter_grocery/common/providers/product_provider.dart';
 import 'package:flutter_grocery/utill/dimensions.dart';
 import 'package:flutter_grocery/utill/styles.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_grocery/common/widgets/custom_directionality_widget.dart';
 
 class ProductTitleWidget extends StatelessWidget {
   final Product? product;
   final int? stock;
   final int? cartIndex;
-  const ProductTitleWidget({super.key, required this.product, required this.stock,required this.cartIndex});
+  final SubVariant? selectedSubVariant;
+
+  const ProductTitleWidget({
+    super.key,
+    required this.product,
+    required this.stock,
+    required this.cartIndex,
+    this.selectedSubVariant,
+  });
 
   @override
   Widget build(BuildContext context) {
-    double? startingPrice;
-    double? startingPriceWithDiscount;
-    double? startingPriceWithCategoryDiscount;
-    double? endingPrice;
-    double? endingPriceWithDiscount;
-    double? endingPriceWithCategoryDiscount;
-    if(product!.variations!.isNotEmpty) {
-      List<double?> priceList = [];
-      for (var variation in product!.variations!) {
-        priceList.add(variation.price);
+    double? originalPrice = selectedSubVariant != null ? selectedSubVariant!.price : product?.price;
+    double? activePrice = PriceConverterHelper.convertWithDiscount(
+      originalPrice,
+      product?.discount,
+      product?.discountType,
+    );
+
+    String activeSizeText = '';
+    if (selectedSubVariant != null) {
+      if (selectedSubVariant!.attributes != null && selectedSubVariant!.attributes is Map) {
+        final map = selectedSubVariant!.attributes as Map;
+        final String unit = map['unit']?.toString() ?? '';
+        final String capacity = map['capacity']?.toString() ?? '';
+        if (unit.toLowerCase() == 'gram' || unit.toLowerCase() == 'gm') {
+          activeSizeText = '${capacity}g';
+        } else if (unit.isNotEmpty) {
+          activeSizeText = '$capacity $unit';
+        } else {
+          activeSizeText = capacity;
+        }
       }
-      priceList.sort((a, b) => a!.compareTo(b!));
-      startingPrice = priceList[0];
-      if(priceList[0]! < priceList[priceList.length-1]!) {
-        endingPrice = priceList[priceList.length-1];
-      }
-    }else {
-      startingPrice = product!.price;
-    }
-
-
-    if(product!.categoryDiscount != null) {
-      startingPriceWithCategoryDiscount = PriceConverterHelper.convertWithDiscount(
-        startingPrice, product!.categoryDiscount!.discountAmount, product!.categoryDiscount!.discountType,
-        maxDiscount: product!.categoryDiscount!.maximumAmount,
-      );
-
-      if(endingPrice != null){
-        endingPriceWithCategoryDiscount = PriceConverterHelper.convertWithDiscount(
-          endingPrice, product!.categoryDiscount!.discountAmount, product!.categoryDiscount!.discountType,
-          maxDiscount: product!.categoryDiscount!.maximumAmount,
-        );
+    } else {
+      if (product?.capacity != null && product!.capacity! > 0) {
+        activeSizeText = '${product!.capacity} ${product!.unit ?? ''}';
       }
     }
-    startingPriceWithDiscount = PriceConverterHelper.convertWithDiscount(startingPrice, product!.discount, product!.discountType);
-
-    if(endingPrice != null) {
-      endingPriceWithDiscount = PriceConverterHelper.convertWithDiscount(endingPrice, product!.discount, product!.discountType);
-    }
-
-    if(startingPriceWithCategoryDiscount != null &&
-        startingPriceWithCategoryDiscount > 0 &&
-        startingPriceWithCategoryDiscount < startingPriceWithDiscount!) {
-      startingPriceWithDiscount = startingPriceWithCategoryDiscount;
-      endingPriceWithDiscount = endingPriceWithCategoryDiscount;
-    }
-
-
-
 
     return Consumer<ProductProvider>(
       builder: (context, productProvider, child) {
@@ -124,6 +110,49 @@ class ProductTitleWidget extends StatelessWidget {
                     style: poppinsMedium.copyWith(color: const Color(0xFF38B23C), fontSize: Dimensions.fontSizeSmall),
                   ),
                 ),
+              ],
+            ),
+            
+            const SizedBox(height: Dimensions.paddingSizeSmall),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                CustomDirectionalityWidget(child: Text(
+                  PriceConverterHelper.convertPrice(context, activePrice),
+                  style: poppinsSemiBold.copyWith(
+                    fontSize: 22,
+                    color: Colors.black87,
+                  ),
+                )),
+                const SizedBox(width: Dimensions.paddingSizeSmall),
+
+                if (originalPrice != null && activePrice != null && originalPrice > activePrice) ...[
+                  CustomDirectionalityWidget(child: Text(
+                    PriceConverterHelper.convertPrice(context, originalPrice),
+                    style: poppinsRegular.copyWith(
+                      fontSize: Dimensions.fontSizeSmall,
+                      decoration: TextDecoration.lineThrough,
+                      color: Theme.of(context).disabledColor,
+                    ),
+                  )),
+                  const SizedBox(width: Dimensions.paddingSizeSmall),
+                ],
+
+                if (activeSizeText.isNotEmpty)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).primaryColor.withOpacity(0.08),
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                    child: Text(
+                      activeSizeText,
+                      style: poppinsMedium.copyWith(
+                        color: Theme.of(context).primaryColor,
+                        fontSize: Dimensions.fontSizeSmall,
+                      ),
+                    ),
+                  ),
               ],
             ),
             SizedBox(height: Dimensions.paddingSizeDefault),

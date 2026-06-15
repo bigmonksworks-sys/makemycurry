@@ -15,6 +15,7 @@ import 'package:flutter_grocery/common/providers/cart_provider.dart';
 import 'package:flutter_grocery/features/splash/providers/splash_provider.dart';
 import 'package:flutter_grocery/utill/order_constants.dart';
 import 'package:flutter_grocery/helper/custom_snackbar_helper.dart';
+import 'package:flutter_grocery/helper/cart_helper.dart';
 import 'package:provider/provider.dart';
 
 class OrderHelper{
@@ -160,33 +161,67 @@ class OrderHelper{
 
 
     if(product != null) {
-      double? price = product.price;
-      int? stock = product.totalStock;
-      Variations? selectedVariation;
-
-
-      for(Variations variation in product.variations!) {
-        if (selectVariationType != null &&  variation.type == selectVariationType) {
-          price = variation.price;
-          selectedVariation = variation;
-          stock = variation.stock;
-          break;
+      SubVariant? selectedSubVariant;
+      if (orderDetailsModel?.variant != null && orderDetailsModel!.variant!.isNotEmpty && product.subVariants != null) {
+        for (var sv in product.subVariants!) {
+          String formatted = sv.name ?? '';
+          if (sv.attributes != null && sv.attributes is Map) {
+            final map = sv.attributes as Map;
+            final String unit = map['unit']?.toString() ?? '';
+            final String capacity = map['capacity']?.toString() ?? '';
+            String attrText = '';
+            if (unit.toLowerCase() == 'gram' || unit.toLowerCase() == 'gm') {
+              attrText = '${capacity}g';
+            } else if (unit.isNotEmpty) {
+              attrText = '$capacity $unit';
+            } else {
+              attrText = capacity;
+            }
+            if (attrText.isNotEmpty) {
+              formatted += ' ($attrText)';
+            }
+          }
+          if (formatted == orderDetailsModel.variant || sv.name == orderDetailsModel.variant) {
+            selectedSubVariant = sv;
+            break;
+          }
         }
       }
 
-      cartModel = CartModel(
-        product.id,
-        product.image!.isNotEmpty ? product.image![0] : '',
-        product.name, price,
-        PriceConverterHelper.convertWithDiscount(price, product.discount, product.discountType),
-        1, selectedVariation,
-        (price!-PriceConverterHelper.convertWithDiscount(price, product.discount, product.discountType)!),
-        (price-PriceConverterHelper.convertWithDiscount(price, product.tax, product.taxType)!),
-        product.capacity,
-        product.unit,
-        stock,
-        product,
-      );
+      if (selectedSubVariant != null) {
+        cartModel = CartHelper.getCartModel(
+          product,
+          quantity: orderDetailsModel?.quantity ?? 1,
+          selectedSubVariant: selectedSubVariant,
+        );
+      } else {
+        double? price = product.price;
+        int? stock = product.totalStock;
+        Variations? selectedVariation;
+
+        for(Variations variation in product.variations ?? []) {
+          if (selectVariationType != null &&  variation.type == selectVariationType) {
+            price = variation.price;
+            selectedVariation = variation;
+            stock = variation.stock;
+            break;
+          }
+        }
+
+        cartModel = CartModel(
+          product.id,
+          (product.image != null && product.image!.isNotEmpty) ? product.image![0] : '',
+          product.name, price,
+          PriceConverterHelper.convertWithDiscount(price, product.discount, product.discountType),
+          orderDetailsModel?.quantity ?? 1, selectedVariation,
+          (price! - PriceConverterHelper.convertWithDiscount(price, product.discount, product.discountType)!),
+          (price - PriceConverterHelper.convertWithDiscount(price, product.tax, product.taxType)!),
+          product.capacity,
+          product.unit,
+          stock,
+          product,
+        );
+      }
     }
 
     return cartModel;

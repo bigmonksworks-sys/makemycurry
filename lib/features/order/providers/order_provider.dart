@@ -296,13 +296,23 @@ void updateDateSlot(int index) {
     _isLoading = false;
 
     if (apiResponse.response != null && apiResponse.response!.statusCode == 200) {
-
-      String? message = apiResponse.response!.data['message'];
-      String orderID = apiResponse.response!.data['order_id'].toString();
-      callback(true, message, orderID);
-      debugPrint('-------- Order placed successfully $orderID ----------');
+      try {
+        String? message = apiResponse.response!.data['message'];
+        String orderID = apiResponse.response!.data['order_id'].toString();
+        callback(true, message, orderID);
+        debugPrint('-------- Order placed successfully $orderID ----------');
+      } catch (e) {
+        debugPrint('-------- Error parsing order success response: $e ----------');
+        callback(false, 'Failed to parse order response: $e', '-1');
+      }
     } else {
-      callback(false, ApiCheckerHelper.getError(apiResponse).errors![0].message, '-1');
+      String? errorMessage;
+      try {
+        errorMessage = ApiCheckerHelper.getError(apiResponse).errors?[0].message;
+      } catch (e) {
+        errorMessage = 'Something went wrong';
+      }
+      callback(false, errorMessage ?? 'Something went wrong', '-1');
     }
     notifyListeners();
   }
@@ -578,7 +588,7 @@ void updateDateSlot(int index) {
         showCustomSnackBarHelper(getTranslated('this_product_is_currently_unavailable', Get.context!));
       }
 
-      CartModel? cartModel = OrderHelper.getReorderCartData(product: product, selectVariationType: selectVariationType);
+      CartModel? cartModel = OrderHelper.getReorderCartData(product: product, selectVariationType: selectVariationType, orderDetailsModel: orderDetails);
 
       if(cartModel != null) {
         reOrderCartList.add(cartModel);

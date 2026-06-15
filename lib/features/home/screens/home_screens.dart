@@ -119,46 +119,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: SizedBox(
             width: Dimensions.webScreenWidth,
             child: Column(children: [
-              if (!ResponsiveHelper.isDesktop(context))
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(Dimensions.paddingSizeLarge, Dimensions.paddingSizeSmall, Dimensions.paddingSizeLarge, Dimensions.paddingSizeDefault),
-                  child: InkWell(
-                    onTap: () => Navigator.pushNamed(context, RouteHelper.searchProduct),
-                    borderRadius: BorderRadius.circular(30),
-                    child: Container(
-                      height: 48,
-                      padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault),
-                      decoration: BoxDecoration(
-                        color: Colors.grey[100],
-                        borderRadius: BorderRadius.circular(30),
-                        border: Border.all(color: Colors.black.withValues(alpha: 0.06), width: 1),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.02),
-                            blurRadius: 6,
-                            offset: const Offset(0, 3),
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(Icons.search, color: Theme.of(context).primaryColor, size: 20),
-                          const SizedBox(width: Dimensions.paddingSizeSmall),
-                          Expanded(
-                            child: Text(
-                              getTranslated('search_for_products', context),
-                              style: poppinsRegular.copyWith(
-                                color: Colors.grey[500],
-                                fontSize: Dimensions.fontSizeDefault,
-                              ),
-                            ),
-                          ),
-                          Icon(Icons.tune_rounded, color: Theme.of(context).primaryColor, size: 20),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
+
               Consumer<BannerProvider>(builder: (context, banner, child) {
                 return (banner.bannerList?.isEmpty ?? false)
                     ? const SizedBox()

@@ -53,6 +53,7 @@ import 'package:universal_html/html.dart' as html;
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
 
 late AndroidNotificationChannel channel;
 
@@ -219,6 +220,7 @@ class _MyAppState extends State<MyApp> {
           onGenerateRoute: RouteHelper.router.generator,
           debugShowCheckedModeBanner: false,
           navigatorKey: navigatorKey,
+          scaffoldMessengerKey: scaffoldMessengerKey,
           theme: Provider.of<ThemeProvider>(context).darkTheme ? dark : light,
           locale: Provider.of<LocalizationProvider>(context).locale,
           localizationsDelegates: const [

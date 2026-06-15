@@ -50,6 +50,20 @@ class CartProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void addMultipleToCart(List<CartModel> cartModels) {
+    if (cartModels.isNotEmpty) {
+      int productId = cartModels.first.id!;
+      _cartList.removeWhere((element) => element.id == productId && element.subVariantId != null);
+    }
+    _cartList.addAll(cartModels);
+    cartRepo?.addToCartList(_cartList);
+    _amount = 0.0;
+    for (var cart in _cartList) {
+      _amount = _amount + (cart.discountedPrice! * cart.quantity!);
+    }
+    notifyListeners();
+  }
+
   void setCartQuantity(bool isIncrement, int? index, {bool showMessage = false, BuildContext? context}) {
 
     if (isIncrement) {

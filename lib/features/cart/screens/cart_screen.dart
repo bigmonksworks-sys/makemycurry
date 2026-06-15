@@ -60,12 +60,16 @@ class _CartScreenState extends State<CartScreen> {
                 icon: const Icon(Icons.arrow_back_ios,
                     color: Colors.black, size: 20),
                 onPressed: () {
-                  if (Navigator.canPop(context)) {
-                    Navigator.pop(context);
-                  } else {
-                    Provider.of<SplashProvider>(context, listen: false)
-                        .setPageIndex(0);
-                  }
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (context.mounted) {
+                      if (Navigator.canPop(context)) {
+                        Navigator.pop(context);
+                      } else {
+                        Provider.of<SplashProvider>(context, listen: false)
+                            .setPageIndex(0);
+                      }
+                    }
+                  });
                 },
               ),
               title: Text('Add To Cart',

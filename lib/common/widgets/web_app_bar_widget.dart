@@ -146,15 +146,15 @@ class _WebAppBarWidgetState extends State<WebAppBarWidget> {
                             },
                             child: Row(
                               children: [
-                                SizedBox(height: 50,
-                                    child: Consumer<SplashProvider>(
-                                      builder:(context, splash, child) => CustomImageWidget(
-                                        placeholder: Images.webBarLogoPlaceHolder,
-                                        image: splash.baseUrls != null ? '${splash.baseUrls!.ecommerceImageUrl}/${splash.configModel!.ecommerceLogo}' : '',
-                                        fit: BoxFit.contain,
-                                        width: 115,
-                                      ),
-                                    )),
+                                 SizedBox(height: 65,
+                                     child: Consumer<SplashProvider>(
+                                       builder:(context, splash, child) => CustomImageWidget(
+                                         placeholder: Images.webBarLogoPlaceHolder,
+                                         image: splash.baseUrls != null ? '${splash.baseUrls!.ecommerceImageUrl}/${splash.configModel!.ecommerceLogo}' : '',
+                                         fit: BoxFit.contain,
+                                         width: 150,
+                                       ),
+                                     )),
 
                               ],
                             ),
