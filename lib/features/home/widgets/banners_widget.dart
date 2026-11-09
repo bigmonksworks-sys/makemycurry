@@ -2,6 +2,7 @@ import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_grocery/features/category/domain/models/category_model.dart';
 import 'package:flutter_grocery/common/models/product_model.dart';
+import 'package:flutter_grocery/features/home/domain/models/banner_model.dart';
 import 'package:flutter_grocery/helper/responsive_helper.dart';
 import 'package:flutter_grocery/helper/route_helper.dart';
 import 'package:flutter_grocery/localization/language_constraints.dart';
@@ -14,18 +15,42 @@ import 'package:flutter_grocery/common/widgets/custom_image_widget.dart';
 import 'package:provider/provider.dart';
 import 'package:shimmer_animation/shimmer_animation.dart';
 
-class BannersWidget extends StatelessWidget {
+class BannersWidget extends StatefulWidget {
+  final bool isSecondary;
   final bool isReverse;
-  const BannersWidget({super.key, this.isReverse = false});
+  const BannersWidget({super.key, this.isSecondary = false, this.isReverse = false});
+
+  @override
+  State<BannersWidget> createState() => _BannersWidgetState();
+}
+
+class _BannersWidgetState extends State<BannersWidget> {
+  int _currentIndex = 0;
 
   @override
   Widget build(BuildContext context) {
     final Size size = MediaQuery.sizeOf(context);
     return Consumer<BannerProvider>(
       builder: (context, bannerProvider, child) {
-        final bannerList = (isReverse && bannerProvider.bannerList != null)
-            ? bannerProvider.bannerList!.reversed.toList()
-            : bannerProvider.bannerList;
+        final rawBanners = bannerProvider.bannerList;
+        if (rawBanners == null || rawBanners.isEmpty) {
+          return const SizedBox();
+        }
+
+        // If secondary banner section and there are fewer than 2 banners, don't show duplicate
+        if ((widget.isSecondary || widget.isReverse) && rawBanners.length < 2) {
+          return const SizedBox();
+        }
+
+        List<BannerModel> bannerList = rawBanners;
+        if ((widget.isSecondary || widget.isReverse) && rawBanners.length >= 2) {
+          // Shift the list by half its length so the two banner sections never play the same banner at the same time
+          final int shift = (rawBanners.length / 2).ceil();
+          bannerList = [
+            ...rawBanners.sublist(shift),
+            ...rawBanners.sublist(0, shift),
+          ];
+        }
 
         return Column(
           children: [
@@ -33,7 +58,7 @@ class BannersWidget extends StatelessWidget {
               width: Dimensions.webScreenWidth,
               height: ResponsiveHelper.isDesktop(context) ? 210 : size.width * 0.49,
               padding: ResponsiveHelper.isDesktop(context) ? const EdgeInsets.only(top: Dimensions.paddingSizeLarge, bottom: Dimensions.paddingSizeSmall) : null,
-              child: bannerList != null ? bannerList.isNotEmpty ? Stack(
+              child: bannerList.isNotEmpty ? Stack(
                 fit: StackFit.expand,
                 children: [
                   CarouselSlider.builder(
@@ -44,10 +69,12 @@ class BannersWidget extends StatelessWidget {
                       enlargeFactor: 0,
                       disableCenter: true,
                       onPageChanged: (index, reason) {
-                        Provider.of<BannerProvider>(context, listen: false).setCurrentIndex(index);
+                        setState(() {
+                          _currentIndex = index;
+                        });
                       },
                     ),
-                    itemCount: bannerList.isEmpty ? 1 : bannerList.length,
+                    itemCount: bannerList.length,
                     itemBuilder: (context, index, _) {
                       return InkWell(
                         hoverColor: Colors.transparent,
@@ -100,27 +127,24 @@ class BannersWidget extends StatelessWidget {
 
                  if(!ResponsiveHelper.isDesktop(context)) Positioned(
                     bottom: 5, left: 0, right: 0,
-                    child: BannerIndicatorView(isReverse: isReverse),
+                    child: BannerIndicatorView(bannerList: bannerList, currentIndex: _currentIndex),
                   ),
-                ]) : Center(child: Text(getTranslated('no_banner_available', context))) : const BannerShimmer(),
+                ]) : Center(child: Text(getTranslated('no_banner_available', context))),
             ),
 
             if(ResponsiveHelper.isDesktop(context)) Padding(
               padding: const EdgeInsets.symmetric(vertical: Dimensions.paddingSizeSmall),
-              child: BannerIndicatorView(isReverse: isReverse),
+              child: BannerIndicatorView(bannerList: bannerList, currentIndex: _currentIndex),
             ),
           ],
         );
       },
     );
   }
-
 }
 
 class BannerShimmer extends StatelessWidget {
-  const BannerShimmer({
-    super.key,
-  });
+  const BannerShimmer({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -136,33 +160,26 @@ class BannerShimmer extends StatelessWidget {
 }
 
 class BannerIndicatorView extends StatelessWidget {
-  final bool isReverse;
-  const BannerIndicatorView({super.key, this.isReverse = false});
+  final List<BannerModel> bannerList;
+  final int currentIndex;
+  const BannerIndicatorView({super.key, required this.bannerList, required this.currentIndex});
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<BannerProvider>(
-      builder: (ctx, bannerProvider, _) {
-        final bannerList = (isReverse && bannerProvider.bannerList != null)
-            ? bannerProvider.bannerList!.reversed.toList()
-            : bannerProvider.bannerList;
-
-        return bannerList == null ? const SizedBox() : Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: bannerList.map((bnr) {
-            int index = bannerList.indexOf(bnr);
-            return Container(
-              margin: const EdgeInsets.symmetric(horizontal: 3),
-              height: 5, width: 10,
-              decoration: BoxDecoration(
-                color: index == bannerProvider.currentIndex
-                    ? Theme.of(context).primaryColor : Theme.of(context).primaryColor.withValues(alpha: 0.5),
-                borderRadius: BorderRadius.circular(Dimensions.radiusSizeDefault)
-              ),
-            );
-          }).toList(),
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: List.generate(bannerList.length, (index) {
+        return Container(
+          margin: const EdgeInsets.symmetric(horizontal: 3),
+          height: 5, width: 10,
+          decoration: BoxDecoration(
+            color: index == currentIndex
+                ? Theme.of(context).primaryColor
+                : Theme.of(context).primaryColor.withValues(alpha: 0.5),
+            borderRadius: BorderRadius.circular(Dimensions.radiusSizeDefault)
+          ),
         );
-      }
+      }),
     );
   }
 }

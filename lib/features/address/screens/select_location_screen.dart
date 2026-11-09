@@ -93,12 +93,17 @@ class _SelectLocationScreenState extends State<SelectLocationScreen> {
                   onMapCreated: (GoogleMapController controller) {
                     Future.delayed(const Duration(milliseconds: 800)).then((value) {
                       _controller = controller;
-                      _controller!.moveCamera(CameraUpdate.newCameraPosition(CameraPosition(
-                          target:  locationProvider.pickPosition.longitude.toInt() == 0 &&  locationProvider.pickPosition.latitude.toInt() == 0 ? _initialPosition : LatLng(
-                        locationProvider.pickPosition.latitude, locationProvider.pickPosition.longitude,
-                      ), zoom: 15)));
+                      if (locationProvider.pickedAddressLatitude == null && locationProvider.pickedAddressLongitude == null) {
+                        AddressHelper.checkPermission(() {
+                          locationProvider.getCurrentLocation(context, false, mapController: _controller);
+                        });
+                      } else {
+                        _controller!.moveCamera(CameraUpdate.newCameraPosition(CameraPosition(
+                            target:  locationProvider.pickPosition.longitude.toInt() == 0 &&  locationProvider.pickPosition.latitude.toInt() == 0 ? _initialPosition : LatLng(
+                          locationProvider.pickPosition.latitude, locationProvider.pickPosition.longitude,
+                        ), zoom: 15)));
+                      }
                     });
-
                   },
                 ),
                 locationProvider.pickAddress != null

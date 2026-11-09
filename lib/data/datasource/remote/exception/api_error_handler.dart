@@ -23,15 +23,20 @@ class ApiErrorHandler {
               break;
             case DioExceptionType.badResponse:
               switch (error.response!.statusCode) {
+                case 429:
+                  errorDescription = "";
+                  break;
                 case 500:
                 case 503:
-                  errorDescription = error.response!.statusMessage;
+                  errorDescription = "";
                   break;
                 default:
                   ErrorResponseModel? errorResponse;
                   try {
-                    errorResponse =
-                        ErrorResponseModel.fromJson(error.response!.data);
+                    if (error.response?.data != null && error.response?.data is! String) {
+                      errorResponse =
+                          ErrorResponseModel.fromJson(error.response!.data);
+                    }
                   } catch (e) {
                     if (kDebugMode) {
                       print('error is -> ${e.toString()}');
@@ -47,8 +52,7 @@ class ApiErrorHandler {
                     }
                     errorDescription = errorResponse.toJson();
                   } else {
-                    errorDescription =
-                        "Failed to load data - status code: ${error.response!.statusCode}";
+                    errorDescription = "";
                   }
               }
               break;

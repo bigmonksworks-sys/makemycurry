@@ -21,28 +21,16 @@
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
-			<key>CFBundleURLSchemes</key>
-			<array>
-				<string>fbYOUR_ID</string>
-			</array>
-		</dict>
-		<dict>
 			<key>CFBundleTypeRole</key>
 			<string>Editor</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>your_CFBundleURLSchemes</string>
+				<string>com.googleusercontent.apps.250728969979-b05c7sun47gqiek1rtp65oaa7knlas36</string>
 			</array>
 		</dict>
 	</array>
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
-	<key>FacebookAppID</key>
-	<string>APP-ID</string>
-	<key>FacebookClientToken</key>
-	<string>CLIENT-TOKEN</string>
-	<key>FacebookDisplayName</key>
-	<string>MakeMyCurry</string>
 	<key>LSApplicationQueriesSchemes</key>
 	<array>
 		<string>tel</string>
@@ -51,11 +39,15 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
-	<string>This app need camera access for taking photo for user profile picture.</string>
+	<string>This app requires camera access to capture photos for your profile and product reviews.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>This app needs location access to track delivery boy so that user can view delivery boy location.</string>
+	<string>This app needs access to location to select your delivery address and track orders.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>This app needs access to location to select your delivery address and track orders.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>This app need media access for taking photo for user profile picture.</string>
+	<string>This app requires access to your photo library to select photos for your profile and product reviews.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>This app requires microphone access for audio recording in customer support.</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>

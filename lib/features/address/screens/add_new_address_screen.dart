@@ -25,7 +25,7 @@ class AddNewAddressScreen extends StatefulWidget {
   final bool isEnableUpdate;
   final bool fromCheckout;
   final AddressModel? address;
-  const AddNewAddressScreen({super.key, this.isEnableUpdate = true, this.address, this.fromCheckout = false});
+  const AddNewAddressScreen({super.key, this.isEnableUpdate = false, this.address, this.fromCheckout = false});
 
   @override
   State<AddNewAddressScreen> createState() => _AddNewAddressScreenState();

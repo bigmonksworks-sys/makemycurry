@@ -50,18 +50,7 @@ class ProductWidget extends StatelessWidget {
       priceWithDiscount = categoryDiscountAmount;
     }
 
-    String? subVariantImage = product.selectedSubVariant?.image;
-    if (subVariantImage == null || subVariantImage.isEmpty) {
-      if (product.subVariants != null && product.subVariants!.isNotEmpty) {
-        for (var sv in product.subVariants!) {
-          if (sv.image != null && sv.image!.isNotEmpty) {
-            subVariantImage = sv.image;
-            break;
-          }
-        }
-      }
-    }
-    final String productDisplayImage = subVariantImage ?? ((product.image != null && product.image!.isNotEmpty) ? product.image![0] : '');
+    final String productDisplayImage = (product.image != null && product.image!.isNotEmpty) ? product.image![0] : '';
     final String productName = product.selectedSubVariant != null 
         ? '${product.name} (${product.selectedSubVariant!.name})' 
         : (product.name ?? '');
@@ -320,18 +309,7 @@ class _ProductGridWidget extends StatelessWidget {
         ? (product.selectedSubVariant!.price ?? product.price ?? 0)
         : (product.price ?? 0);
 
-    String? subVariantImage = product.selectedSubVariant?.image;
-    if (subVariantImage == null || subVariantImage.isEmpty) {
-      if (product.subVariants != null && product.subVariants!.isNotEmpty) {
-        for (var sv in product.subVariants!) {
-          if (sv.image != null && sv.image!.isNotEmpty) {
-            subVariantImage = sv.image;
-            break;
-          }
-        }
-      }
-    }
-    final String productDisplayImage = subVariantImage ?? ((product.image != null && product.image!.isNotEmpty) ? product.image![0] : '');
+    final String productDisplayImage = (product.image != null && product.image!.isNotEmpty) ? product.image![0] : '';
     final String productName = product.selectedSubVariant != null 
         ? '${product.name} (${product.selectedSubVariant!.name})' 
         : (product.name ?? '');

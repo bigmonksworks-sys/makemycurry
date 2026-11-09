@@ -5,15 +5,19 @@ import 'package:geolocator/geolocator.dart';
 
 class AddressHelper {
   static void checkPermission(Function callback) async {
-    LocationPermission permission = await Geolocator.requestPermission();
+    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      await Geolocator.openLocationSettings();
+      return;
+    }
+    LocationPermission permission = await Geolocator.checkPermission();
     if(permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
-    }else if(permission == LocationPermission.deniedForever) {
+    }
+    if(permission == LocationPermission.deniedForever) {
       showDialog(context: Get.context!, barrierDismissible: false, builder: (context) => const PermissionDialogWidget());
-    }else {
+    }else if(permission == LocationPermission.whileInUse || permission == LocationPermission.always) {
       callback();
     }
   }
-
-
 }

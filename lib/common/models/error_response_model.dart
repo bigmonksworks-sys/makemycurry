@@ -24,7 +24,11 @@ class ErrorResponseModel {
       String message = json["message"]?.toString() ?? json["msg"]?.toString() ?? json.toString();
       _errors = [Errors(code: '', message: message)];
     } else if (json is String) {
-      _errors = [Errors(code: '', message: json)];
+      if (json.contains('<!DOCTYPE') || json.contains('<html') || json.contains('Too Many Requests')) {
+        _errors = [];
+      } else {
+        _errors = [Errors(code: '', message: json)];
+      }
     } else {
       _errors = [Errors(code: '', message: json.toString())];
     }

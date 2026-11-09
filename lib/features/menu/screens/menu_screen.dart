@@ -49,11 +49,24 @@ class _MenuScreenState extends State<MenuScreen> {
 class MenuWidget extends StatelessWidget {
   const MenuWidget({super.key});
 
+  /// Closes the drawer reliably on both web and mobile.
+  ///
+  /// Inside a Flutter [Drawer], the widget tree lives in an Overlay, so
+  /// [Scaffold.of(context).isDrawerOpen] is unreliable on Flutter web —
+  /// it silently returns false, preventing [Navigator.pop] from ever being
+  /// called and leaving the drawer stuck open.
+  ///
+  /// [Navigator.of(context).pop()] is always safe here because the Drawer
+  /// itself is pushed as a route on the Navigator stack.
+  void _closeDrawer(BuildContext context) {
+    Navigator.of(context).pop();
+  }
+
   @override
   Widget build(BuildContext context) {
     final SplashProvider splashProvider = Provider.of<SplashProvider>(context, listen: false);
     final bool isLoggedIn = Provider.of<AuthProvider>(context, listen: false).isLoggedIn();
-    
+
     return Drawer(
       backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
@@ -62,7 +75,7 @@ class MenuWidget extends StatelessWidget {
       child: SafeArea(
         child: Column(
           children: [
-            // Header Top Actions
+            // ── Header: Close Button ──────────────────────────────────────
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
               child: Row(
@@ -70,84 +83,99 @@ class MenuWidget extends StatelessWidget {
                 children: [
                   IconButton(
                     icon: const Icon(Icons.close, color: Colors.black, size: 24),
-                    onPressed: () {
-                      if (Scaffold.of(context).isDrawerOpen) {
-                        Navigator.pop(context);
-                      }
-                    },
+                    onPressed: () => _closeDrawer(context),
                   ),
                 ],
               ),
             ),
-            
-            // User Profile Section
+
+            // ── User Profile Section ──────────────────────────────────────
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20.0),
               child: Consumer<ProfileProvider>(
                 builder: (context, profileProvider, child) => Row(
                   children: [
+                    // Avatar
                     InkWell(
                       onTap: () {
-                        if (Scaffold.of(context).isDrawerOpen) Navigator.pop(context);
-                        Navigator.of(context).pushNamed(RouteHelper.profile, arguments: const ProfileScreen());
+                        _closeDrawer(context);
+                        Future.microtask(() => Navigator.of(context)
+                            .pushNamed(RouteHelper.profile, arguments: const ProfileScreen()));
                       },
                       child: ClipOval(
-                        child: isLoggedIn && splashProvider.baseUrls != null 
+                        child: isLoggedIn && splashProvider.baseUrls != null
                             ? CustomImageWidget(
                                 placeholder: Images.profile,
-                                image: '${splashProvider.baseUrls?.customerImageUrl}/${profileProvider.userInfoModel?.image}',
-                                height: 50, width: 50, fit: BoxFit.cover,
-                              ) 
+                                image:
+                                    '${splashProvider.baseUrls?.customerImageUrl}/${profileProvider.userInfoModel?.image}',
+                                height: 50,
+                                width: 50,
+                                fit: BoxFit.cover,
+                              )
                             : Image.asset(Images.profile, height: 50, width: 50, fit: BoxFit.cover),
                       ),
                     ),
                     const SizedBox(width: 15),
+
+                    // Name / Phone
                     Expanded(
                       child: InkWell(
                         onTap: () {
-                          if (Scaffold.of(context).isDrawerOpen) Navigator.pop(context);
-                          Navigator.of(context).pushNamed(RouteHelper.profile, arguments: const ProfileScreen());
+                          _closeDrawer(context);
+                          Future.microtask(() => Navigator.of(context)
+                              .pushNamed(RouteHelper.profile, arguments: const ProfileScreen()));
                         },
                         child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start, 
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              isLoggedIn && profileProvider.userInfoModel != null 
+                              isLoggedIn && profileProvider.userInfoModel != null
                                   ? '${profileProvider.userInfoModel!.fName ?? ''} ${profileProvider.userInfoModel!.lName ?? ''}'
                                   : getTranslated('guest', context),
                               style: poppinsSemiBold.copyWith(fontSize: 16, color: Colors.black),
-                              maxLines: 1, overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
                             if (isLoggedIn && profileProvider.userInfoModel != null)
                               Text(
                                 profileProvider.userInfoModel!.phone ?? '',
-                                style: poppinsRegular.copyWith(fontSize: 12, color: const Color(0xFF666666)),
-                                maxLines: 1, overflow: TextOverflow.ellipsis,
+                                style: poppinsRegular.copyWith(
+                                    fontSize: 12, color: const Color(0xFF666666)),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                               ),
-                          ]
+                          ],
                         ),
                       ),
                     ),
+
+                    // Notification Bell
                     IconButton(
                       icon: Stack(
                         clipBehavior: Clip.none,
                         children: [
                           const Icon(Icons.notifications_none, color: Colors.black, size: 28),
                           Positioned(
-                            top: 2, right: 4,
+                            top: 2,
+                            right: 4,
                             child: Container(
-                              height: 8, width: 8,
+                              height: 8,
+                              width: 8,
                               decoration: const BoxDecoration(
                                 color: Colors.red,
                                 shape: BoxShape.circle,
                               ),
-                            )
-                          )
+                            ),
+                          ),
                         ],
                       ),
                       onPressed: () {
-                        if (Scaffold.of(context).isDrawerOpen) Navigator.pop(context);
-                        Navigator.pushNamed(context, RouteHelper.notification, arguments: const NotificationScreen());
+                        _closeDrawer(context);
+                        Future.microtask(() => Navigator.pushNamed(
+                              context,
+                              RouteHelper.notification,
+                              arguments: const NotificationScreen(),
+                            ));
                       },
                     ),
                   ],
@@ -155,51 +183,56 @@ class MenuWidget extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 20),
-            
-            // Menu Items List
+
+            // ── Menu Items ────────────────────────────────────────────────
             Expanded(
               child: Consumer<SplashProvider>(
                 builder: (context, splash, child) {
                   return ListView.builder(
                     padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                    itemCount: splashProvider.screenList.length + 2, // items + spacer/divider + logout
+                    itemCount: splashProvider.screenList.length + 2,
                     itemBuilder: (context, index) {
-                      
-                      // Render screen list items
+                      // Screen list items
                       if (index < splashProvider.screenList.length) {
-                        var model = splashProvider.screenList[index];
-                        bool isSelected = splash.pageIndex == index;
-                        
+                        final model = splashProvider.screenList[index];
+                        final bool isSelected = splash.pageIndex == index;
+
                         return Padding(
                           padding: const EdgeInsets.only(bottom: 8.0),
                           child: InkWell(
                             borderRadius: BorderRadius.circular(10),
                             onTap: () {
                               splash.setPageIndex(index);
-                              if (Scaffold.of(context).isDrawerOpen) {
-                                Navigator.pop(context);
-                              }
+                              _closeDrawer(context);
                             },
                             child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 16.0, vertical: 14.0),
                               decoration: BoxDecoration(
-                                color: isSelected ? const Color(0xFFE0F2FE) : Colors.transparent,
+                                color: isSelected
+                                    ? const Color(0xFFE0F2FE)
+                                    : Colors.transparent,
                                 borderRadius: BorderRadius.circular(10),
                               ),
                               child: Row(
                                 children: [
                                   CustomAssetImageWidget(
-                                    model.icon, 
-                                    color: isSelected ? const Color(0xFF0284C7) : const Color(0xFF888888),
-                                    width: 20, height: 20,
+                                    model.icon,
+                                    color: isSelected
+                                        ? const Color(0xFF0284C7)
+                                        : const Color(0xFF888888),
+                                    width: 20,
+                                    height: 20,
                                   ),
                                   const SizedBox(width: 15),
                                   Text(
-                                    getTranslated(model.title, context), 
+                                    getTranslated(model.title, context),
                                     style: poppinsMedium.copyWith(
                                       fontSize: 14,
-                                      color: isSelected ? const Color(0xFF0284C7) : const Color(0xFF555555),
-                                    )
+                                      color: isSelected
+                                          ? const Color(0xFF0284C7)
+                                          : const Color(0xFF555555),
+                                    ),
                                   ),
                                 ],
                               ),
@@ -207,31 +240,43 @@ class MenuWidget extends StatelessWidget {
                           ),
                         );
                       }
-                      
-                      // Render spacing/divider
+
+                      // Divider
                       if (index == splashProvider.screenList.length) {
                         return const Padding(
                           padding: EdgeInsets.symmetric(vertical: 10.0),
                           child: Divider(color: Color(0xFFE5E5E5), thickness: 1),
                         );
                       }
-                      
-                      // Render Logout
+
+                      // Logout / Login row
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 8.0, top: 10),
                         child: InkWell(
                           borderRadius: BorderRadius.circular(10),
                           onTap: () {
-                            if (Scaffold.of(context).isDrawerOpen) Navigator.pop(context);
-                            if(isLoggedIn) {
-                              showDialog(context: context, barrierDismissible: false, builder: (context) => const SignOutDialogWidget());
+                            if (isLoggedIn) {
+                              _closeDrawer(context);
+                              Future.microtask(() => showDialog(
+                                    context: context,
+                                    barrierDismissible: false,
+                                    builder: (context) =>
+                                        const SignOutDialogWidget(),
+                                  ));
                             } else {
+                              _closeDrawer(context);
                               splashProvider.setPageIndex(0);
-                              Navigator.pushNamedAndRemoveUntil(context, RouteHelper.getLoginRoute(), (route) => false);
+                              Future.microtask(() =>
+                                  Navigator.pushNamedAndRemoveUntil(
+                                    context,
+                                    RouteHelper.getLoginRoute(),
+                                    (route) => false,
+                                  ));
                             }
                           },
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16.0, vertical: 14.0),
                             decoration: BoxDecoration(
                               color: Colors.transparent,
                               borderRadius: BorderRadius.circular(10),
@@ -239,17 +284,20 @@ class MenuWidget extends StatelessWidget {
                             child: Row(
                               children: [
                                 CustomAssetImageWidget(
-                                  isLoggedIn ? Images.logOut : Images.logIn, 
+                                  isLoggedIn ? Images.logOut : Images.logIn,
                                   color: const Color(0xFFFF3B30),
-                                  width: 20, height: 20,
+                                  width: 20,
+                                  height: 20,
                                 ),
                                 const SizedBox(width: 15),
                                 Text(
-                                  getTranslated(isLoggedIn ? 'log_out' : 'login', context), 
+                                  getTranslated(
+                                      isLoggedIn ? 'log_out' : 'login',
+                                      context),
                                   style: poppinsSemiBold.copyWith(
                                     fontSize: 14,
                                     color: const Color(0xFFFF3B30),
-                                  )
+                                  ),
                                 ),
                               ],
                             ),
@@ -266,4 +314,4 @@ class MenuWidget extends StatelessWidget {
       ),
     );
   }
-}
+}

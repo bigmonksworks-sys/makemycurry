@@ -79,7 +79,7 @@ class MapWidget extends StatelessWidget {
 
               locationProvider.mapController = controller;
 
-              if (!isEnableUpdate && locationProvider.mapController != null) {
+              if ((!isEnableUpdate || address == null) && locationProvider.mapController != null) {
                 if(locationProvider.pickedAddressLatitude == null && locationProvider.pickedAddressLongitude == null){
                   AddressHelper.checkPermission(()=>locationProvider.getCurrentLocation(
                     context, true, mapController: locationProvider.mapController,

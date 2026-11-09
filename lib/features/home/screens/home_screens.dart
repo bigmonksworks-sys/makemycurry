@@ -25,7 +25,6 @@ import 'package:flutter_grocery/localization/language_constraints.dart';
 import 'package:flutter_grocery/main.dart';
 import 'package:flutter_grocery/utill/dimensions.dart';
 import 'package:flutter_grocery/utill/product_type.dart';
-import 'package:flutter_grocery/utill/styles.dart';
 import 'package:provider/provider.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -240,7 +239,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   Consumer<BannerProvider>(builder: (context, banner, child) {
                     return (banner.bannerList?.isEmpty ?? false)
                         ? const SizedBox()
-                        : const BannersWidget(isReverse: true);
+                        : const BannersWidget(isSecondary: true);
                   }),
                 ]);
               }),

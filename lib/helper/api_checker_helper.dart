@@ -11,6 +11,10 @@ import 'package:provider/provider.dart';
 
 class ApiCheckerHelper {
   static void checkApi(ApiResponseModel apiResponse) {
+    if (apiResponse.response?.statusCode == 429) {
+      return;
+    }
+
     ErrorResponseModel error = getError(apiResponse);
 
     if (error.errors != null && error.errors!.isNotEmpty &&
@@ -27,8 +31,18 @@ class ApiCheckerHelper {
     } else {
       String? errorMessage = (error.errors != null && error.errors!.isNotEmpty)
           ? error.errors!.first.message
-          : 'Something went wrong';
-      showCustomSnackBarHelper(getTranslated(errorMessage, Get.context!));
+          : null;
+
+      if (errorMessage != null && errorMessage.isNotEmpty) {
+        final lower = errorMessage.toLowerCase();
+        if (lower.contains('<!doctype') ||
+            lower.contains('<html') ||
+            lower.contains('too many requests') ||
+            lower.contains('status code:')) {
+          return;
+        }
+        showCustomSnackBarHelper(getTranslated(errorMessage, Get.context!));
+      }
     }
   }
 

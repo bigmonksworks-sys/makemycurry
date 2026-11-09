@@ -8,6 +8,19 @@ import 'package:flutter_grocery/utill/styles.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 
 void showCustomSnackBarHelper(String message, {bool isError = true, Duration? duration, Widget? content, EdgeInsetsGeometry? margin, Color? backgroundColor, EdgeInsetsGeometry? padding}) {
+  if (message.isEmpty) return;
+
+  final lower = message.toLowerCase();
+  if (lower.contains('<!doctype') ||
+      lower.contains('<html') ||
+      lower.contains('<head') ||
+      lower.contains('<body') ||
+      lower.contains('too many requests') ||
+      lower.contains('status code: 429') ||
+      lower.contains('status code: 500')) {
+    return;
+  }
+
   scaffoldMessengerKey.currentState?.clearSnackBars();
   final double width = MediaQuery.of(Get.context!).size.width;
   scaffoldMessengerKey.currentState?.showSnackBar(SnackBar(key: UniqueKey(), content: content ??  Text(message, style: poppinsLight.copyWith(color: Colors.white),),
@@ -26,6 +39,12 @@ void showCustomSnackBarHelper(String message, {bool isError = true, Duration? du
 
 
 void showFlutterDefaultToaster({required String message, bool isError = true, Color? backgroundColor}){
+  if (message.isEmpty) return;
+  final lower = message.toLowerCase();
+  if (lower.contains('<!doctype') || lower.contains('<html') || lower.contains('too many requests')) {
+    return;
+  }
+
   Fluttertoast.showToast(
     msg: message,
     toastLength: Toast.LENGTH_LONG,

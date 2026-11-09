@@ -65,6 +65,10 @@ Future<void> main() async {
   setPathUrlStrategy();
   WidgetsFlutterBinding.ensureInitialized();
 
+  ErrorWidget.builder = (FlutterErrorDetails details) {
+    return const SizedBox();
+  };
+
 
 
   if(!kIsWeb) {

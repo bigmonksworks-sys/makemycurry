@@ -7,6 +7,10 @@
   margin: 0;
   padding: 0;
 }
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
 /* Loader */
 .preloader {
   position: fixed;

@@ -11,7 +11,7 @@ class AppConstants {
   static const AppMode appMode = AppMode.release;
   static const LocalCachesTypeEnum cachesType = LocalCachesTypeEnum.all;
   static const String fontFamily = 'Poppins';
-  static const String baseUrl = 'https://app.makemycurry.in';
+  static const String baseUrl = 'https://app.makemycurry.in'; 
   static const String webHostUrl = 'https://www.makemycurry.in/';
 // // // static const String baseUrl = 'http://127.0.0.1:8000';
 // // // static const String webHostUrl = 'http://127.0.0.1:8000/';

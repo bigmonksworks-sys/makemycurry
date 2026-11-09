@@ -39,6 +39,8 @@ ios/build
 pubspec.lock
 
 # Web related
+web/main.dart.js
+
 
 # Symbolication related
 app.*.symbols
